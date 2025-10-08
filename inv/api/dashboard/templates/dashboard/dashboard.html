@@ -1,0 +1,66 @@
+{% extends "core/base.html" %}
+
+{% block title %}
+  Dashboard
+{% endblock title %}
+
+{% block content %}
+<div class="min-h-screen bg-[#1b1038] text-white p-8">
+  <h1 class="text-3xl font-bold mb-8">📊 Dashboard</h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
+    
+    <!-- Today Overview -->
+    <div class="bg-[#2a1e52] rounded-2xl p-6 flex flex-col justify-between shadow-lg">
+      <div>
+        <h2 class="text-lg font-semibold mb-2">Today</h2>
+        <p class="text-5xl font-bold">137</p>
+        <p class="text-sm text-green-400 mt-1">▲ 35 vs same day last week</p>
+      </div>
+      <div class="mt-6">
+        <p class="text-2xl font-semibold">$21.8k</p>
+        <p class="text-sm text-green-400">▲ $5.6k vs same day last week</p>
+      </div>
+    </div>
+
+    <!-- Processing Section -->
+    <div class="bg-[#2a1e52] rounded-2xl p-6 flex flex-col justify-between shadow-lg">
+      <div>
+        <h2 class="text-lg font-semibold mb-2">Processing</h2>
+        <p class="text-4xl font-bold">43</p>
+        <p class="text-sm text-gray-400">Unfulfilled Orders</p>
+      </div>
+      <div class="mt-6 text-center">
+        <h3 class="text-sm font-semibold mb-2">Avg fulfilment time (7d)</h3>
+        <p class="text-3xl font-semibold text-yellow-400">6 hr</p>
+      </div>
+      <div class="mt-6 text-center">
+        <p class="text-2xl font-bold">23</p>
+        <p class="text-sm text-gray-400">Returns to be processed</p>
+      </div>
+    </div>
+
+    <!-- Past 30 Days Overview -->
+    <div class="bg-[#2a1e52] rounded-2xl p-6 flex flex-col justify-between shadow-lg">
+      <div>
+        <h2 class="text-lg font-semibold mb-2">Past 30 Days</h2>
+        <p class="text-4xl font-bold">2,822</p>
+        <p class="text-sm text-green-400 mt-1">▲ 834 vs last month</p>
+      </div>
+      <div class="mt-6">
+        <p class="text-2xl font-semibold">$448.7k</p>
+        <p class="text-sm text-green-400">▲ $132.6k vs last month</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Icons Row -->
+  <div class="flex justify-center gap-10 mt-12">
+    <i class="fa-solid fa-cart-shopping fa-3x text-blue-500"></i>
+    <i class="fa-solid fa-box fa-3x text-green-500"></i>
+    <i class="fa-solid fa-layer-group fa-3x text-red-500"></i>
+  </div>
+
+  <p class="text-center text-gray-400 mt-6">This is a test page to verify Font Awesome integration.</p>
+</div>
+{% endblock content %}

@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+{% block title %}
+    Subcategories
+{% endblock title %}
+{% block content %}
+    <div class="max-w-4xl mx-auto mt-10">
+        <!-- Header -->
+        <h1 class="text-3xl font-bold mb-2 flex items-center gap-2">📁 Subcategories</h1>
+        <p class="text-gray-600 mb-8">Manage subcategories under each category.</p>
+        <!-- Form Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <h2 class="text-xl font-semibold mb-6">➕ Add New Subcategory</h2>
+            <form method="POST" action=".">
+                {% csrf_token %}
+                <!-- Subcategory Name -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">{{ form.name.label }}</label>
+                    {{ form.name }}
+                    {% if form.name.help_text %}<small class="text-gray-500">{{ form.name.help_text }}</small>{% endif %}
+                </div>
+                <!-- Parent Category -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">{{ form.category.label }}</label>
+                    {{ form.category }}
+                    {% if form.category.help_text %}<small class="text-gray-500">{{ form.category.help_text }}</small>{% endif %}
+                </div>
+                <!-- Error Messages -->
+                {% if form.errors or form.non_field_errors %}
+                    <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-xl">
+                        {% for field in form %}{{ field.errors }}{% endfor %}
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+                <!-- Submit Button -->
+                <button type="submit"
+                        class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition">
+                    Add Subcategory
+                </button>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

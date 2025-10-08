@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>
+      {% block title %}My Site{% endblock %}
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://kit.fontawesome.com/83b78ac574.js"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body class="bg-gray-50 text-gray-800 font-sans">
+    <div x-data="{ open: true }" class="flex h-screen overflow-hidden">
+      {% if user.is_authenticated %}
+        <!-- Sidebar (imported modularly) -->
+        {% include "core/sidebar.html" %}
+      {% endif %}
+      <!-- Main Content -->
+      <main class="flex-1 overflow-y-auto px-6 py-10">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

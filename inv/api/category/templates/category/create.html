@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}
+{% block title %}
+    Categories
+{% endblock title %}
+{% block content %}
+    <div>
+        <h1 class="text-3xl font-bold mb-6">📂 Categories</h1>
+        <p class="text-gray-600">Manage your product categories here.</p>
+        <div>
+            <div>
+                <h2>Add New Category</h2>
+                <form method="POST" action=".">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="inline-block mb-2">Category Name</label>
+                        <br>
+                        {{ form.name }}
+                    </div>
+                    {% if form.errors or form.non_field_errors %}
+                        <div class="mb-3 p-6 bg-red-100 rounded-xl">
+                            {% for field in form %}{{ field.errors }}{% endfor %}
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    <button type="submit"
+                            class="py-4 px-8 text-lg bg-teal-500 hover:bg-teal-700 rounded-xl text-white">
+                        Add Category
+                    </button>
+                </form>
+                <div></div>
+            </div>
+        </div>
+    {% endblock content %}
