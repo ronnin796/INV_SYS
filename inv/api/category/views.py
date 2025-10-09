@@ -6,11 +6,17 @@ from django.shortcuts import redirect
 from django.shortcuts import get_object_or_404
 
 def category_list(request):
-    category_list = Category.objects.all()
-    # Logic to retrieve and display categories
+    query = request.GET.get('q', '')  # get search term if it exists
+    if query:
+        categories = Category.objects.filter(name__icontains=query)
+    else:
+        categories = Category.objects.all()
+
     return render(request, 'category/list.html', {
-        'categories': category_list
+        'categories': categories,
+        'query': query,
     })
+
 
 def category_create(request):
     if request.method == 'POST':
@@ -18,7 +24,7 @@ def category_create(request):
         if form.is_valid():
             form.save()
             messages.success(request, "New category created successfully.")
-            return redirect('category_list')  # Redirect to the category list page
+            return redirect('category:category_list')  # Redirect to the category list page
     else:
         form = CategoryForm()
     return render(request, 'category/create.html', {'form': form})
@@ -31,7 +37,7 @@ def edit_category(request, pk):
     # Allow only superusers to edit
     if not request.user.is_superuser:
         messages.error(request, "You are not authorized to edit categories.")
-        return redirect('categories_list')
+        return redirect('category:category_list')
 
     if request.method == 'POST':
         form = CategoryForm(request.POST, instance=item)
@@ -51,7 +57,7 @@ def delete_category(request, pk):
     # Allow only superusers to delete
     if not request.user.is_superuser:
         messages.error(request, "You are not authorized to delete categories.")
-        return redirect('categories_list')
+        return redirect('category:category_list')
 
     # Handle POST request (actual deletion)
     if request.method == 'POST':

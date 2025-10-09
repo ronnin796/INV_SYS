@@ -11,7 +11,7 @@ def sidebar_links(request):
     # Add admin-only links
     if request.user.is_authenticated and request.user.is_staff:
         sidebar_items.extend([
-            {'name': 'Suppliers', 'icon': 'fa-solid fa-truck', 'url_name': '#'},
+            {'name': 'Suppliers', 'icon': 'fa-solid fa-truck', 'url_name': 'suppliers:supplier_list'},
             {'name': 'Users', 'icon': 'fa-solid fa-users', 'url_name': '#'},
         ])
 

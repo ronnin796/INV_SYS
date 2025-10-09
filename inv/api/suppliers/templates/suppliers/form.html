@@ -1,0 +1,43 @@
+{% extends "core/base.html" %}
+{% load widget_tweaks %}
+{% block title %}
+    {% if view.object %}
+        Edit Supplier
+    {% else %}
+        Add Supplier
+    {% endif %}
+{% endblock title %}
+{% block content %}
+    <div class="max-w-2xl mx-auto mt-12">
+        <div class="bg-white shadow-lg rounded-3xl p-10">
+            <h1 class="text-3xl font-bold mb-8 text-gray-800">
+                {% if view.object %}
+                    Edit Supplier
+                {% else %}
+                    Add New Supplier
+                {% endif %}
+            </h1>
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">{{ field.label }}</label>
+                        {{ field|add_class:"w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" }}
+                        {% if field.help_text %}<p class="text-sm text-gray-400 mt-1">{{ field.help_text }}</p>{% endif %}
+                        {% for error in field.errors %}<p class="text-red-600 text-sm mt-1">{{ error }}</p>{% endfor %}
+                    </div>
+                {% endfor %}
+                <div class="flex justify-end">
+                    <button type="submit"
+                            class="bg-teal-500 hover:bg-teal-600 transition text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl">
+                        {% if view.object %}
+                            Update
+                        {% else %}
+                            Add
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

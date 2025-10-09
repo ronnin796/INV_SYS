@@ -11,5 +11,7 @@ urlpatterns = [
     path("dashboard/", include("api.dashboard.urls")),
     path("category/", include("api.category.urls")),
     path("subcategory/", include("api.subcategory.urls")),
+    # path("product/", include("api.product.urls")),
+    path("suppliers/", include("api.suppliers.urls")),
 ]
 

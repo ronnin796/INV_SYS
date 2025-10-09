@@ -3,35 +3,73 @@
   Categories
 {% endblock title %}
 {% block content %}
-  <div class="max-w-5xl mx-auto mt-10">
+  <div class="max-w-6xl mx-auto mt-10">
+    {% if messages %}
+      <div class="max-w-6xl mx-auto mt-6">
+        {% for message in messages %}
+          <div class="p-4 mb-4 rounded-xl {% if message.tags == 'warning' %}bg-yellow-100 text-yellow-800{% elif message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
     <!-- Header -->
     <div class="flex items-center justify-between mb-8">
       <div>
         <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2">📂 Categories</h1>
         <p class="text-gray-600">Manage your product categories here.</p>
       </div>
-      <!-- Add Category Button -->
-      <a href="{% url 'category:category_create' %}"
-         class="bg-blue-600 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition">➕ Add Category</a>
+      <!-- Right-side controls -->
+      <div class="flex items-center gap-3">
+        <!-- Search -->
+        <form method="get" action="." class="flex items-center gap-2">
+          <input type="text"
+                 name="q"
+                 value="{{ query }}"
+                 placeholder="Search categories..."
+                 class="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <button type="submit"
+                  class="bg-gray-800 text-white px-4 py-2 rounded-xl hover:bg-gray-900 transition">🔍</button>
+        </form>
+        <!-- Add Button -->
+        <a href="{% url 'category:category_create' %}"
+           class="bg-blue-600 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition">➕ Add
+        Category</a>
+      </div>
     </div>
-    <!-- Category List -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {% for item in categories %}
-        <a href={% url 'subcategory:subcategory_list' item.id %}>
-          <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
-            <h2 class="text-lg font-semibold text-gray-800">{{ item.name }}</h2>
-            <div class="mt-3 flex justify-end">
-              <a href="{% url 'category:edit_category' item.id %}"
-                 class="text-blue-600 hover:underline text-sm">Edit</a>
-              <span class="mx-2 text-gray-400">|</span>
-              <a href="{% url 'category:delete_category' item.id %}"
-                 class="text-red-600 hover:underline text-sm">Delete</a>
-            </div>
-          </div>
-        </a>
-      {% empty %}
-        <p class="text-gray-500 col-span-full text-center py-10">No categories found. Try adding one!</p>
-      {% endfor %}
+    <!-- Category Table -->
+    <div class="bg-white p-6 rounded-2xl shadow">
+      {% if categories %}
+        <table class="min-w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-100 text-left text-gray-700">
+              <th class="py-3 px-4 rounded-tl-xl"># SN</th>
+              <th class="py-3 px-4">Category Name</th>
+              <th class="py-3 px-4 text-right rounded-tr-xl">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in categories %}
+              <tr class="border-t hover:bg-gray-50">
+                <td class="py-3 px-4">{{ forloop.counter }}</td>
+                <td class="py-3 px-4 font-medium text-gray-800">
+                  <a href="{% url 'subcategory:subcategory_list' item.id %}"
+                     class="hover:text-blue-600 transition">{{ item.name }}</a>
+                </td>
+                <td class="py-3 px-4 text-right">
+                  <a href="{% url 'category:edit_category' item.id %}"
+                     class="text-blue-600 hover:underline">Edit</a>
+                  <span class="mx-2 text-gray-400">|</span>
+                  <a href="{% url 'category:delete_category' item.id %}"
+                     class="text-red-600 hover:underline">Delete</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-gray-500 text-center py-10">No categories found. Try adding one!</p>
+      {% endif %}
     </div>
   </div>
 {% endblock content %}

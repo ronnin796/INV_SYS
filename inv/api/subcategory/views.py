@@ -6,13 +6,19 @@ from django.shortcuts import redirect
 from django.shortcuts import get_object_or_404
 from api.category.models import Category
 
-def subcategory_list(request , pk):
+def subcategory_list(request, pk):
     category = get_object_or_404(Category, pk=pk)
-    subcategory_list = category.subcategories.all()
-    # Logic to retrieve and display categories
+    query = request.GET.get('q', '').strip()
+
+    if query:
+        subcategories = category.subcategories.filter(name__icontains=query)
+    else:
+        subcategories = category.subcategories.all()
+
     return render(request, 'subcategory/list.html', {
-        'categories': subcategory_list , 
-        'category': category
+        'subcategories': subcategories,
+        'category': category,
+        'query': query,
     })
 
 def subcategory_create(request):
