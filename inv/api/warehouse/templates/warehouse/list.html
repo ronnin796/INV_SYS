@@ -52,7 +52,10 @@
                     {% for warehouse in warehouses %}
                         <tr class="hover:bg-gray-50 transition">
                             <td class="px-6 py-4">{{ forloop.counter }}</td>
-                            <td class="px-6 py-4 font-medium text-gray-800">{{ warehouse.name }}</td>
+                            <td class="px-6 py-4 font-medium text-gray-800">
+                                <a href="{% url 'inventory:inventory_list' %}?warehouse={{ warehouse.id }}"
+                                   class="text-blue-600 hover:underline">{{ warehouse.name }}</a>
+                            </td>
                             <td class="px-6 py-4 text-gray-600">{{ warehouse.location }}</td>
                             <td class="px-6 py-4 text-gray-600">
                                 {% if warehouse.manager %}

@@ -85,3 +85,20 @@ def load_subcategories(request):
     subcategories = SubCategory.objects.filter(category_id=category_id).order_by('name')
     subcategory_list = [{'id': sub.id, 'name': sub.name} for sub in subcategories]
     return JsonResponse(subcategory_list, safe=False)
+
+
+
+def ajax_load_products(request):
+    warehouse_id = request.GET.get('warehouse')
+    subcategory_id = request.GET.get('subcategory')
+
+    products = Product.objects.all()
+
+    if warehouse_id:
+        products = products.filter(warehouse_id=warehouse_id)
+
+    if subcategory_id:
+        products = products.filter(subcategory_id=subcategory_id)
+
+    data = list(products.values('id', 'name'))
+    return JsonResponse(data, safe=False)
