@@ -36,6 +36,7 @@ def subcategory_create(request):
 def edit_subcategory(request, pk):
     # Get the category by primary key (pk)
     item = get_object_or_404(SubCategory, pk=pk)
+    item_id = item.category.id
 
     # Allow only superusers to edit
     if not request.user.is_superuser:
@@ -47,7 +48,7 @@ def edit_subcategory(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, "SubCategory updated successfully!")
-            return redirect('subcategory:subcategory_list')  # Redirect to the category list page
+            return redirect('subcategory:subcategory_list' , pk = item_id)  # Redirect to the category list page
     else:
         form = SubCategoryForm(instance=item)
 

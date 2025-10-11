@@ -9,6 +9,15 @@ class Supplier(models.Model):
 
     def __str__(self):
         return self.name
+    class Meta:
+        indexes = [
+            models.Index(fields=['name']),
+            models.Index(fields=['contact_email']),
+            models.Index(fields=['phone_number']),
+        ]
+        verbose_name = 'Supplier'
+        verbose_name_plural = 'Suppliers'
+        unique_together = ('contact_email', 'phone_number')
     
 
 # class SupplierProduct(models.Model):

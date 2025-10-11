@@ -1,0 +1,85 @@
+{% extends "core/base.html" %}
+{% load widget_tweaks %}
+{% block scripts %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock scripts %}
+{% block title %}
+    {% if view.object %}
+        Edit Product
+    {% else %}
+        Add Product
+    {% endif %}
+{% endblock title %}
+{% block content %}
+    <div class="max-w-3xl mx-auto mt-12">
+        <div class="bg-white shadow-lg rounded-3xl p-10">
+            <h1 class="text-3xl font-bold mb-8 text-gray-800">
+                {% if view.object %}
+                    Edit Product
+                {% else %}
+                    Add New Product
+                {% endif %}
+            </h1>
+            <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">{{ field.label }}</label>
+                        {{ field|add_class:"w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" }}
+                        {% if field.help_text %}<p class="text-sm text-gray-400 mt-1">{{ field.help_text }}</p>{% endif %}
+                        {% for error in field.errors %}<p class="text-red-600 text-sm mt-1">{{ error }}</p>{% endfor %}
+                    </div>
+                {% endfor %}
+                <div class="flex justify-end">
+                    <button type="submit"
+                            class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition">
+                        {% if view.object %}
+                            Update
+                        {% else %}
+                            Add
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    <script type="text/javascript">
+$(document).ready(function() {
+    // When category changes
+    $("#id_category").change(function() {
+        var url = "{% url 'product:ajax_load_subcategories' %}";  // your endpoint
+        var categoryId = $(this).val();
+
+        $.ajax({
+            url: url,
+            data: {
+                'category': categoryId
+            },
+            success: function(data) {
+                // Clear existing options
+                $("#id_subcategory").html("");
+                $("#id_subcategory").append('<option value="">---------</option>');
+
+                // Get currently selected subcategory if editing
+                var selectedSubcategory = "{{ form.instance.subcategory.id|default_if_none:'' }}";
+
+                // Populate new options
+                data.forEach(function(subcategory) {
+                    var selected = subcategory.id == selectedSubcategory ? 'selected' : '';
+                    $("#id_subcategory").append(
+                        '<option value="' + subcategory.id + '" ' + selected + '>' + subcategory.name + '</option>'
+                    );
+                });
+            }
+        });
+    });
+
+    // Trigger change on page load if a category is already selected (for edit forms)
+    if ($("#id_category").val()) {
+        $("#id_category").trigger('change');
+    }
+});
+    </script>
+{% endblock %}
