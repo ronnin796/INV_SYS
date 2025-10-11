@@ -4,6 +4,7 @@ def sidebar_links(request):
         {'name': 'Dashboard', 'icon': 'fa-solid fa-house', 'url_name': 'dashboard:dashboard'},
         {'name': 'Products', 'icon': 'fa-solid fa-box', 'url_name': 'product:product_list'},
         {'name': 'Categories', 'icon': 'fa-solid fa-layer-group', 'url_name': 'category:category_list'},
+        {'name': 'Warehouses', 'icon': 'fa-solid fa-warehouse', 'url_name': 'warehouse:warehouse_list'},
         {'name': 'Orders', 'icon': 'fa-solid fa-cart-shopping', 'url_name': '#'},
         {'name': 'Profile', 'icon': 'fa-solid fa-gear', 'url_name': '#'},
     ]

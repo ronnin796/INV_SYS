@@ -1,0 +1,81 @@
+{% extends "core/base.html" %}
+{% block title %}
+    Warehouses
+{% endblock title %}
+{% block content %}
+    <div class="max-w-7xl mx-auto mt-10 space-y-6">
+        <!-- Alerts -->
+        {% if messages %}
+            <div>
+                {% for message in messages %}
+                    <div class="p-4 rounded-xl mb-3 {% if message.tags == 'success' %}bg-green-100 text-green-800 {% elif message.tags == 'error' %}bg-red-100 text-red-800 {% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800 {% else %}bg-blue-100 text-blue-800{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <!-- Header + Search + Add -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-3xl font-bold text-gray-800">🏢 Warehouses</h1>
+            <div class="flex flex-col sm:flex-row gap-2 items-center w-full sm:w-auto">
+                <form method="GET" class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <input type="text"
+                           name="q"
+                           value="{{ request.GET.q }}"
+                           placeholder="Search warehouses..."
+                           class="border rounded-xl px-4 py-2 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button type="submit"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition">
+                        Search
+                    </button>
+                </form>
+                <a href="{% url 'warehouse:warehouse_create' %}"
+                   class="bg-teal-500 text-white px-5 py-2.5 rounded-xl shadow hover:bg-teal-600 transition">
+                    ➕ Add Warehouse
+                </a>
+            </div>
+        </div>
+        <!-- Table -->
+        <div class="overflow-x-auto bg-white rounded-2xl shadow">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">S.N.</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Manager</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact Number</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for warehouse in warehouses %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4">{{ forloop.counter }}</td>
+                            <td class="px-6 py-4 font-medium text-gray-800">{{ warehouse.name }}</td>
+                            <td class="px-6 py-4 text-gray-600">{{ warehouse.location }}</td>
+                            <td class="px-6 py-4 text-gray-600">
+                                {% if warehouse.manager %}
+                                    {{ warehouse.manager.username }}
+                                {% else %}
+                                    <span class="text-gray-400 italic">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-gray-600">{{ warehouse.contact_number|default:"-" }}</td>
+                            <td class="px-6 py-4 flex gap-3">
+                                <a href="{% url 'warehouse:warehouse_edit' warehouse.id %}"
+                                   class="text-blue-600 hover:underline text-sm">Edit</a>
+                                <a href="{% url 'warehouse:warehouse_delete' warehouse.id %}"
+                                   class="text-red-600 hover:underline text-sm">Delete</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-6 text-gray-500">No warehouses found. Try adding one!</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock content %}
