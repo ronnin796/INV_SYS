@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "api.suppliers",
     "api.warehouse",
     "api.inventory",
+    "api.purchase",
 ]
 
 MIDDLEWARE = [

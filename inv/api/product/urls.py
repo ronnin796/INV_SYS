@@ -10,5 +10,8 @@ urlpatterns = [
     path('<int:pk>/delete/', views.ProductDeleteView.as_view(), name='product_delete'),
     path('ajax/load-subcategories/', views.load_subcategories, name='ajax_load_subcategories'),
     path('ajax/load-products/', views.ajax_load_products, name='ajax_load_products'),
+    path('ajax/load-supplier-products/', views.ajax_load_supplier_products, name='ajax_load_supplier_products'),
+    path('ajax/get-price/', views.ajax_get_product_price, name='ajax_get_product_price'),
+
 ]
 

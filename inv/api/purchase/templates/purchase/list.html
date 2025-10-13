@@ -1,0 +1,105 @@
+{% extends "core/base.html" %}
+{% block title %}
+    Purchase Orders
+{% endblock title %}
+{% block content %}
+    <div class="max-w-7xl mx-auto mt-10 space-y-6">
+        <!-- Alerts -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="p-4 rounded-xl mb-3 {% if message.tags == 'success' %}bg-green-100 text-green-800 {% elif message.tags == 'error' %}bg-red-100 text-red-800 {% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800 {% else %}bg-blue-100 text-blue-800{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        <!-- Header + Actions -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-3xl font-bold text-gray-800">📦 Purchase Orders</h1>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <form method="GET" class="flex flex-col sm:flex-row gap-2">
+                    <input type="text"
+                           name="q"
+                           value="{{ request.GET.q }}"
+                           placeholder="Search purchase orders..."
+                           class="border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="supplier"
+                            class="border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Suppliers</option>
+                        {% for s in suppliers %}
+                            <option value="{{ s.id }}"
+                                    {% if request.GET.supplier == s.id|stringformat:"s" %}selected{% endif %}>
+                                {{ s.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <select name="warehouse"
+                            class="border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Warehouses</option>
+                        {% for w in warehouses %}
+                            <option value="{{ w.id }}"
+                                    {% if request.GET.warehouse == w.id|stringformat:"s" %}selected{% endif %}>
+                                {{ w.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition">
+                        Filter
+                    </button>
+                </form>
+                <a href="{% url 'purchase:purchase_create' %}"
+                   class="bg-teal-500 text-white px-5 py-2.5 rounded-xl shadow hover:bg-teal-600 transition">
+                    ➕ New Purchase
+                </a>
+            </div>
+        </div>
+        <!-- Table -->
+        <div class="overflow-x-auto bg-white rounded-2xl shadow">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">S.N.</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for purchase in purchase_orders %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4">{{ forloop.counter }}</td>
+                            <td class="px-6 py-4 font-semibold text-gray-800">{{ purchase.reference_number }}</td>
+                            <td class="px-6 py-4">{{ purchase.supplier.name }}</td>
+                            <td class="px-6 py-4">{{ purchase.warehouse.name }}</td>
+                            <td class="px-6 py-4">{{ purchase.date|date:"Y-m-d" }}</td>
+                            <td class="px-6 py-4">
+                                {% if purchase.status == "Received" %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Received</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">{{ purchase.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 flex flex-wrap gap-2">
+                                <a href="{% url 'purchase:purchase_update' purchase.id %}"
+                                   class="text-blue-600 hover:underline text-sm">Edit</a>
+                                <a href="{% url 'purchase:purchase_delete' purchase.id %}"
+                                   class="text-red-600 hover:underline text-sm">Delete</a>
+                                {% if purchase.status != 'Received' %}
+                                    <a href="{% url 'purchase:mark_as_received' purchase.id %}"
+                                       class="text-green-600 hover:underline text-sm">Mark as Received</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-6 text-gray-500">No purchase orders found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock content %}

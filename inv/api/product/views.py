@@ -102,3 +102,23 @@ def ajax_load_products(request):
 
     data = list(products.values('id', 'name'))
     return JsonResponse(data, safe=False)
+
+
+
+
+
+def ajax_load_supplier_products(request):
+    """Return all products (with price) for a given supplier."""
+    supplier_id = request.GET.get("supplier_id")
+    products = Product.objects.filter(supplier_id=supplier_id).values("id", "name", "price")
+    return JsonResponse(list(products), safe=False)
+
+
+def ajax_get_product_price(request):
+    """Return a single product’s price by ID."""
+    product_id = request.GET.get("product_id")
+    try:
+        product = Product.objects.get(pk=product_id)
+        return JsonResponse({"price": str(product.price)})
+    except Product.DoesNotExist:
+        return JsonResponse({"price": ""})

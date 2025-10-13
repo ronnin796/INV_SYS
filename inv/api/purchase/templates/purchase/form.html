@@ -1,0 +1,197 @@
+{% extends "core/base.html" %}
+{% load widget_tweaks %}
+{% block title %}
+    {% if view.object %}
+        Edit Purchase Order
+    {% else %}
+        New Purchase Order
+    {% endif %}
+{% endblock title %}
+{% block content %}
+    <div class="max-w-5xl mx-auto mt-12">
+        <div class="bg-white shadow-lg rounded-3xl p-10">
+            <h1 class="text-3xl font-bold mb-8 text-gray-800">
+                {% if view.object %}
+                    📝 Edit Purchase Order
+                {% else %}
+                    ➕ Create Purchase Order
+                {% endif %}
+            </h1>
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <!-- 🔹 Purchase Order Fields -->
+                <div class="grid sm:grid-cols-2 gap-6">
+                    {% for field in form %}
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">{{ field.label }}</label>
+                            {{ field|add_class:"w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" }}
+                            {% for error in field.errors %}<p class="text-red-600 text-sm mt-1">{{ error }}</p>{% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <hr class="my-8">
+                <!-- 🔹 Inline Formset -->
+                <h2 class="text-2xl font-semibold mb-4 text-gray-800">📋 Purchase Items</h2>
+                {{ items_formset.management_form }}
+                <div id="items" class="space-y-4">
+                    {% for formset_form in items_formset.forms %}
+                        <div class="grid sm:grid-cols-6 gap-4 border rounded-xl p-4 bg-gray-50 item-form"
+                             data-index="{{ forloop.counter0 }}">
+                            {% for hidden in formset_form.hidden_fields %}{{ hidden }}{% endfor %}
+                            <div>
+                                <label class="block text-gray-600 text-sm mb-1">Product</label>
+                                {{ formset_form.product|add_class:"product-select w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" }}
+                            </div>
+                            <div>
+                                <label class="block text-gray-600 text-sm mb-1">Quantity</label>
+                                {{ formset_form.quantity|add_class:"quantity-input w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" }}
+                            </div>
+                            <div>
+                                <label class="block text-gray-600 text-sm mb-1">Price</label>
+                                {{ formset_form.price|add_class:"price-input w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" }}
+                            </div>
+                            <div>
+                                <label class="block text-gray-600 text-sm mb-1">Total</label>
+                                <input type="text"
+                                       class="row-total w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
+                                       readonly
+                                       value="{{ formset_form.instance.total|default:'0.00' }}">
+                            </div>
+                            <div class="flex items-end justify-center">
+                                {{ formset_form.DELETE }}
+                                <button type="button"
+                                        class="remove-item bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">
+                                    ✖
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <!-- Add New Item Button -->
+                <div class="mt-4">
+                    <button type="button"
+                            id="add-item"
+                            class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg shadow">
+                        ➕ Add Another Item
+                    </button>
+                </div>
+                <!-- Grand Total -->
+                <div class="flex justify-end mt-4 font-semibold text-lg">
+                    Grand Total: <span id="grand-total">0.00</span>
+                </div>
+                <!-- Submit -->
+                <div class="flex justify-end mt-8">
+                    <button type="submit"
+                            class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition">
+                        {% if view.object %}
+                            Update
+                        {% else %}
+                            Create
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+$(function () {
+  const prefix = "{{ items_formset.prefix }}";
+  const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
+  let formCount = parseInt(totalForms.val(), 10);
+
+  function updateRowTotal($row) {
+    const qty = parseFloat($row.find(".quantity-input").val() || 0);
+    const price = parseFloat($row.find(".price-input").val() || 0);
+    const total = qty * price;
+    $row.find(".row-total").val(total.toFixed(2));
+    return total;
+  }
+
+  function updateGrandTotal() {
+    let grand = 0;
+    $(".item-form").each(function () {
+      grand += updateRowTotal($(this));
+    });
+    $("#grand-total").text(grand.toFixed(2));
+  }
+
+  function loadProductsForSupplier(supplierId) {
+    if (!supplierId) return;
+    $.get("{% url 'product:ajax_load_supplier_products' %}", { supplier_id: supplierId })
+      .done(function (data) {
+        $(".product-select").each(function () {
+          const $select = $(this);
+          const selected = $select.val();
+          $select.empty().append('<option value="">Select Product</option>');
+          data.forEach(prod => {
+            const sel = selected == prod.id ? "selected" : "";
+            $select.append(`<option value="${prod.id}" data-price="${prod.price}" ${sel}>${prod.name}</option>`);
+          });
+        });
+        $(".product-select").trigger("change");
+      });
+  }
+
+  $("#id_supplier").on("change", function () {
+    loadProductsForSupplier($(this).val());
+  });
+
+  $(document).on("change", ".product-select", function () {
+    const price = $(this).find("option:selected").data("price") || 0;
+    const $row = $(this).closest(".item-form");
+    $row.find(".price-input").val(parseFloat(price).toFixed(2));
+    updateRowTotal($row);
+    updateGrandTotal();
+  });
+
+  $(document).on("input", ".quantity-input, .price-input", function () {
+    updateRowTotal($(this).closest(".item-form"));
+    updateGrandTotal();
+  });
+
+  $("#add-item").on("click", function () {
+    const newFormHtml = `{{ items_formset.empty_form.as_p|escapejs }}`.replace(/__prefix__/g, formCount);
+    const $newRow = $(`
+      <div class="grid sm:grid-cols-6 gap-4 border rounded-xl p-4 bg-gray-50 item-form" data-index="${formCount}">
+        ${newFormHtml}
+        <div>
+          <label class="block text-gray-600 text-sm mb-1">Total</label>
+          <input type="text" class="row-total w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" readonly value="0.00">
+        </div>
+        <div class="flex items-end justify-center">
+          <button type="button" class="remove-item bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">✖</button>
+        </div>
+      </div>
+    `);
+    $("#items").append($newRow);
+    formCount++;
+    totalForms.val(formCount);
+    loadProductsForSupplier($("#id_supplier").val());
+  });
+
+  $(document).on("click", ".remove-item", function () {
+    const $row = $(this).closest(".item-form");
+    const $delete = $row.find("input[name$='-DELETE']");
+    if ($delete.length) {
+      $delete.prop("checked", true);
+      $row.hide();
+    } else {
+      $row.remove();
+      formCount--;
+      totalForms.val(formCount);
+    }
+    updateGrandTotal();
+  });
+
+  (function init() {
+    const supplierId = $("#id_supplier").val();
+    if (supplierId) loadProductsForSupplier(supplierId);
+    updateGrandTotal();
+  })();
+});
+    </script>
+{% endblock extra_js %}
