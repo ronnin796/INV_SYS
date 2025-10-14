@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "api.purchase.apps.PurchaseConfig",
     "widget_tweaks",
     "api",
     "api.user",
@@ -52,7 +53,6 @@ INSTALLED_APPS = [
     "api.suppliers",
     "api.warehouse",
     "api.inventory",
-    "api.purchase",
 ]
 
 MIDDLEWARE = [
