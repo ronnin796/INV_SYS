@@ -12,6 +12,8 @@ urlpatterns = [
     path('ajax/load-products/', views.ajax_load_products, name='ajax_load_products'),
     path('ajax/load-supplier-products/', views.ajax_load_supplier_products, name='ajax_load_supplier_products'),
     path('ajax/get-price/', views.ajax_get_product_price, name='ajax_get_product_price'),
+    path('ajax/load-warehouse-products/', views.ajax_load_warehouse_products, name='ajax_load_warehouse_supplier_products'),
+    
 
 ]
 

@@ -74,7 +74,7 @@
                             <td class="px-6 py-4 font-semibold text-gray-800">{{ purchase.reference_number }}</td>
                             <td class="px-6 py-4">{{ purchase.supplier.name }}</td>
                             <td class="px-6 py-4">{{ purchase.warehouse.name }}</td>
-                            <td class="px-6 py-4">{{ purchase.date|date:"Y-m-d" }}</td>
+                            <td class="px-6 py-4">{{ purchase.updated_at|date:"Y-m-d" }}</td>
                             <td class="px-6 py-4">
                                 {% if purchase.status == "Received" %}
                                     <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Received</span>

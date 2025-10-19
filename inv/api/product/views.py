@@ -9,6 +9,7 @@ from api.core.permissions import AdminRequiredMixin  # assuming your AdminRequir
 from api.subcategory.models import SubCategory
 from django.http import JsonResponse
 from api.category.models import Category
+from api.inventory.models import Inventory
 
 
 class ProductListView(ListView):
@@ -91,17 +92,20 @@ def load_subcategories(request):
 def ajax_load_products(request):
     warehouse_id = request.GET.get('warehouse')
     subcategory_id = request.GET.get('subcategory')
+    supplier_id = request.GET.get('supplier')
 
     products = Product.objects.all()
 
+    if supplier_id:
+        products = products.filter(supplier_id=supplier_id)
     if warehouse_id:
-        products = products.filter(warehouse_id=warehouse_id)
-
+        products = products.filter(inventory_entries__warehouse_id=warehouse_id).distinct()
     if subcategory_id:
         products = products.filter(subcategory_id=subcategory_id)
 
-    data = list(products.values('id', 'name'))
+    data = list(products.values('id', 'name', 'price'))
     return JsonResponse(data, safe=False)
+
 
 
 
@@ -122,3 +126,16 @@ def ajax_get_product_price(request):
         return JsonResponse({"price": str(product.price)})
     except Product.DoesNotExist:
         return JsonResponse({"price": ""})
+
+def ajax_load_warehouse_products(request):
+    warehouse_id = request.GET.get("warehouse_id")
+    supplier_id = request.GET.get("supplier_id")
+
+    products = Product.objects.all()
+    if supplier_id:
+        products = products.filter(supplier_id=supplier_id)
+    if warehouse_id:
+        products = products.filter(inventory_entries__warehouse_id=warehouse_id).distinct()
+
+    data = [{"id": p.id, "name": p.name, "price": str(p.price)} for p in products]
+    return JsonResponse(data, safe=False)

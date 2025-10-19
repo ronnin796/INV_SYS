@@ -47,36 +47,32 @@
 {% block extra_js %}
     <script type="text/javascript">
 $(document).ready(function() {
-    // When category changes
+    // When Category changes → load Subcategories dynamically
     $("#id_category").change(function() {
-        var url = "{% url 'product:ajax_load_subcategories' %}";  // your endpoint
-        var categoryId = $(this).val();
+        const url = "{% url 'product:ajax_load_subcategories' %}";
+        const categoryId = $(this).val();
 
         $.ajax({
             url: url,
-            data: {
-                'category': categoryId
-            },
+            data: { 'category': categoryId },
             success: function(data) {
-                // Clear existing options
-                $("#id_subcategory").html("");
-                $("#id_subcategory").append('<option value="">---------</option>');
+                const $subcategory = $("#id_subcategory");
+                $subcategory.empty().append('<option value="">---------</option>');
 
-                // Get currently selected subcategory if editing
-                var selectedSubcategory = "{{ form.instance.subcategory.id|default_if_none:'' }}";
+                const selectedSubcategory = "{{ form.instance.subcategory.id|default_if_none:'' }}";
 
-                // Populate new options
-                data.forEach(function(subcategory) {
-                    var selected = subcategory.id == selectedSubcategory ? 'selected' : '';
-                    $("#id_subcategory").append(
-                        '<option value="' + subcategory.id + '" ' + selected + '>' + subcategory.name + '</option>'
-                    );
+                data.forEach(function(sub) {
+                    const selected = (sub.id == selectedSubcategory) ? 'selected' : '';
+                    $subcategory.append(`<option value="${sub.id}" ${selected}>${sub.name}</option>`);
                 });
+            },
+            error: function(xhr, status, error) {
+                console.error("Error loading subcategories:", error);
             }
         });
     });
 
-    // Trigger change on page load if a category is already selected (for edit forms)
+    // Auto-trigger if category is already selected (useful for edit forms)
     if ($("#id_category").val()) {
         $("#id_category").trigger('change');
     }

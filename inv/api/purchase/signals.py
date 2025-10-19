@@ -1,7 +1,7 @@
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from .models import PurchaseOrder
-from .utils import update_inventory_after_status_change
+from api.inventory.utils import update_inventory_after_status_change
 
 
 @receiver(pre_save, sender=PurchaseOrder)

@@ -1,0 +1,158 @@
+{% extends "core/base.html" %}
+{% block content %}
+    <div class="space-y-8">
+        <!-- Header -->
+        <div>
+            <h1 class="text-3xl font-bold mb-2">📈 Forecast for {{ inventory.product.name }}</h1>
+            <p class="text-gray-600">
+                Warehouse: <strong>{{ inventory.warehouse.name }}</strong>
+            </p>
+        </div>
+        {% if forecast_data.historical or forecast_data.forecast %}
+            <!-- Info Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white shadow-md rounded-2xl p-4 text-center border">
+                    <p class="text-gray-500 text-sm">Predicted Sales (Next 30 days)</p>
+                    <p class="text-2xl font-bold text-blue-600">{{ forecast_data.predicted_sales|floatformat:2 }}</p>
+                </div>
+                <div class="bg-white shadow-md rounded-2xl p-4 text-center border">
+                    <p class="text-gray-500 text-sm">Projected Stock</p>
+                    <p class="text-2xl font-bold {% if forecast_data.will_be_low %}text-red-600{% else %}text-green-600{% endif %}">
+                        {{ forecast_data.projected_stock|floatformat:2 }}
+                    </p>
+                </div>
+                <div class="bg-white shadow-md rounded-2xl p-4 text-center border">
+                    <p class="text-gray-500 text-sm">Reorder Level</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ inventory.reorder_level|default:0 }}</p>
+                </div>
+                <div class="bg-white shadow-md rounded-2xl p-4 text-center border">
+                    <p class="text-gray-500 text-sm">Status</p>
+                    <p class="text-lg font-semibold {% if forecast_data.will_be_low %}text-red-500{% else %}text-green-500{% endif %}">
+                        {% if forecast_data.will_be_low %}
+                            ⚠️ Low Stock Soon
+                        {% else %}
+                            ✅ Stable
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <!-- Charts -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Main Forecast Chart -->
+                <div class="col-span-2 bg-white shadow-lg p-6 rounded-2xl border">
+                    <h2 class="text-xl font-semibold mb-4">Sales Forecast Timeline</h2>
+                    <canvas id="forecastChart" height="200"></canvas>
+                </div>
+                <!-- Stock Level Gauge -->
+                <div class="bg-white shadow-lg p-6 rounded-2xl border flex flex-col justify-center items-center">
+                    <h2 class="text-lg font-semibold mb-2">Stock Status</h2>
+                    <canvas id="stockGauge" width="200" height="200"></canvas>
+                    <p class="mt-2 text-gray-600 text-sm">Projected after forecast period</p>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-center text-gray-500">No forecast data available for this product.</p>
+        {% endif %}
+    </div>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% if forecast_data %}
+        <script>
+// Parse forecast data safely
+const forecastData = JSON.parse('{{ forecast_data_json|escapejs }}');
+
+// Line chart data
+const historical = forecastData.historical || {};
+const forecast = forecastData.forecast || {};
+
+const labels = [...Object.keys(historical), ...Object.keys(forecast)].sort();
+const historicalValues = Object.values(historical);
+const forecastValues = [
+    ...Array(Object.keys(historical).length).fill(null),
+    ...Object.values(forecast)
+];
+
+// Main Line Chart
+new Chart(document.getElementById('forecastChart'), {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Historical Sales',
+                data: [...historicalValues, ...Array(Object.keys(forecast).length).fill(null)],
+                borderColor: 'rgba(37, 99, 235, 0.8)',
+                fill: false,
+                tension: 0.3
+            },
+            {
+                label: 'Forecasted Sales',
+                data: [...Array(Object.keys(historical).length).fill(null), ...Object.values(forecast)],
+                borderColor: 'rgba(239, 68, 68, 0.8)',
+                borderDash: [5, 5],
+                fill: false,
+                tension: 0.3
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: true, position: 'bottom' },
+            title: { display: true, text: 'Sales Forecast (ARIMA Model)' }
+        },
+        scales: {
+            x: { title: { display: true, text: 'Date' } },
+            y: { title: { display: true, text: 'Quantity Sold' }, beginAtZero: true }
+        }
+    }
+});
+
+// Stock Gauge
+const projectedStock = Number({{ forecast_data.projected_stock|default:0 }});
+const reorderLevel = Number({{ inventory.reorder_level|default:0 }});
+const maxLevel = Math.max(projectedStock, reorderLevel) * 1.5;
+
+new Chart(document.getElementById('stockGauge'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Stock Level', 'Remaining Capacity'],
+        datasets: [{
+            data: [projectedStock, Math.max(maxLevel - projectedStock, 0)],
+            backgroundColor: [
+                projectedStock <= reorderLevel ? 'rgba(239, 68, 68, 0.8)' : 'rgba(34, 197, 94, 0.8)',
+                'rgba(229, 231, 235, 0.6)'
+            ],
+            borderWidth: 0,
+            cutout: '70%'
+        }]
+    },
+    options: {
+        plugins: {
+            tooltip: { enabled: false },
+            legend: { display: false },
+            title: { display: true, text: `${projectedStock.toFixed(0)} units`, position: 'center' }
+        }
+    },
+    plugins: [{
+        id: 'centerText',
+        beforeDraw(chart) {
+            const { ctx, chartArea } = chart;
+            ctx.save();
+            const fontSize = chart.width / 10;
+            ctx.font = `${fontSize}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = projectedStock <= reorderLevel ? '#ef4444' : '#22c55e';
+            ctx.fillText(
+                Math.round(projectedStock),
+                (chartArea.left + chartArea.right) / 2,
+                (chartArea.top + chartArea.bottom) / 2
+            );
+            ctx.restore();
+        }
+    }]
+});
+        </script>
+    {% endif %}
+{% endblock %}

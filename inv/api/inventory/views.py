@@ -8,17 +8,36 @@ from .forms import InventoryForm
 from api.warehouse.models import Warehouse
 from api.category.models import Category
 from api.subcategory.models import SubCategory
-
+from api.suppliers.models import Supplier  # Import here to avoid circular imports
+from api.product.models import Product
 
 # -----------------------------------------
 # Base CRUD mixin for DRYness
 # -----------------------------------------
 class InventoryBaseView(AdminRequiredMixin, SuccessMessageMixin):
-    """Base mixin for all Inventory CRUD views."""
     model = Inventory
     form_class = InventoryForm
     template_name = 'inventory/form.html'
     success_url = reverse_lazy('inventory:inventory_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+
+        # Extract product-related context for editing
+        inventory = getattr(self, 'object', None)
+        product = getattr(inventory, 'product', None)
+
+        context.update({
+            "suppliers": Supplier.objects.all(),
+            "categories": Category.objects.all(),
+            "subcategories": SubCategory.objects.filter(category=product.category)
+                if product and product.category else [],
+            "products": Product.objects.filter(subcategory=product.subcategory)
+                if product and product.subcategory else [],
+        })
+        return context
+
 
 
 # -----------------------------------------

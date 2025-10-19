@@ -1,8 +1,6 @@
 {% extends "core/base.html" %}
 {% load widget_tweaks %}
-{% block title %}
-    Add/Edit Inventory
-{% endblock title %}
+{% block title %}Add/Edit Inventory{% endblock %}
 {% block content %}
     <div class="max-w-3xl mx-auto mt-12">
         <div class="bg-white shadow-lg rounded-3xl p-10">
@@ -15,13 +13,69 @@
             </h1>
             <form method="POST" class="space-y-6">
                 {% csrf_token %}
-                {% for field in form %}
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">{{ field.label }}</label>
-                        {{ field|add_class:"w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" }}
-                        {% for error in field.errors %}<p class="text-red-600 text-sm mt-1">{{ error }}</p>{% endfor %}
-                    </div>
-                {% endfor %}
+                <!-- Supplier -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Supplier</label>
+                    <select id="id_supplier"
+                            name="supplier"
+                            class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">Select Supplier</option>
+                        {% for s in suppliers %}
+                            <option value="{{ s.id }}"
+                                    {% if form.instance.product and form.instance.product.supplier_id == s.id %}selected{% endif %}>
+                                {{ s.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Category -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Category</label>
+                    <select id="id_category"
+                            name="category"
+                            class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">Select Category</option>
+                        {% for c in categories %}
+                            <option value="{{ c.id }}"
+                                    {% if form.instance.product and form.instance.product.category_id == c.id %}selected{% endif %}>
+                                {{ c.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Subcategory -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Subcategory</label>
+                    <select id="id_subcategory"
+                            name="subcategory"
+                            class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">Select Subcategory</option>
+                    </select>
+                </div>
+                <!-- Product -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Product</label>
+                    <select id="id_product"
+                            name="product"
+                            class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">Select Product</option>
+                    </select>
+                </div>
+                <!-- Warehouse -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Warehouse</label>
+                    {{ form.warehouse|add_class:"w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500" }}
+                </div>
+                <!-- Quantity -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Quantity</label>
+                    {{ form.quantity|add_class:"w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500" }}
+                </div>
+                <!-- Reorder Level -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Reorder Level</label>
+                    {{ form.reorder_level|add_class:"w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500" }}
+                </div>
                 <div class="flex justify-end">
                     <button type="submit"
                             class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition">
@@ -35,4 +89,48 @@
             </form>
         </div>
     </div>
-{% endblock content %}
+{% endblock %}
+{% block extra_js %}
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+    const subcategoryUrl = "{% url 'product:ajax_load_subcategories' %}";
+    const productUrl = "{% url 'product:ajax_load_products' %}";
+
+    const supplierSelect = document.getElementById("id_supplier");
+    const categorySelect = document.getElementById("id_category");
+    const subcategorySelect = document.getElementById("id_subcategory");
+    const productSelect = document.getElementById("id_product");
+
+    // Load subcategories when category changes
+    categorySelect.addEventListener("change", () => {
+        fetch(`${subcategoryUrl}?category=${categorySelect.value}`)
+            .then(res => res.json())
+            .then(data => {
+                subcategorySelect.innerHTML = "<option value=''>Select Subcategory</option>";
+                data.forEach(item => {
+                    subcategorySelect.innerHTML += `<option value='${item.id}'>${item.name}</option>`;
+                });
+                productSelect.innerHTML = "<option value=''>Select Product</option>";
+            });
+    });
+
+    // Load products when supplier or subcategory changes
+    [subcategorySelect, supplierSelect].forEach(sel => {
+        sel.addEventListener("change", () => {
+            const params = new URLSearchParams({
+                subcategory: subcategorySelect.value,
+                supplier: supplierSelect.value,
+            });
+            fetch(`${productUrl}?${params.toString()}`)
+                .then(res => res.json())
+                .then(data => {
+                    productSelect.innerHTML = "<option value=''>Select Product</option>";
+                    data.forEach(item => {
+                        productSelect.innerHTML += `<option value='${item.id}'>${item.name}</option>`;
+                    });
+                });
+        });
+    });
+});
+    </script>
+{% endblock %}
