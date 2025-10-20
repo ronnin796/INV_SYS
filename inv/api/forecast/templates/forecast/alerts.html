@@ -1,0 +1,28 @@
+{% extends "core/base.html" %}
+{% block content %}
+    <h1 class="text-xl font-bold mb-4">⚠️ Today's Low-Stock Forecasts</h1>
+    <table class="table-auto w-full border">
+        <thead class="bg-gray-100">
+            <tr>
+                <th>Product</th>
+                <th>Warehouse</th>
+                <th>Projected Stock</th>
+                <th>Forecast Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alert in alerts %}
+                <tr class="bg-red-50">
+                    <td>{{ alert.product.name }}</td>
+                    <td>{{ alert.warehouse.name }}</td>
+                    <td>{{ alert.projected_stock|floatformat:2 }}</td>
+                    <td>{{ alert.forecast_date }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-4">No alerts today ✅</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

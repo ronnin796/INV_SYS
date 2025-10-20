@@ -8,6 +8,15 @@ from django.shortcuts import render, get_object_or_404
 from api.sales.models import SalesItem
 from .utils import forecast_sales_for_product
 import json
+from django.utils import timezone
+
+
+def forecast_alerts_view(request):
+    from .models import ForecastResult
+    today = timezone.now().date()
+    alerts = ForecastResult.objects.filter(forecast_date=today, will_be_low=True)
+    return render(request, "forecast/alerts.html", {"alerts": alerts})
+
 
 def forecast_dashboard(request):
     product_id = request.GET.get("product_id")
