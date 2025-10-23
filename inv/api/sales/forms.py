@@ -32,6 +32,8 @@ class SalesItemForm(forms.ModelForm):
             "product": forms.Select(attrs={"class": "w-full ... product-select"}),
             "quantity": forms.NumberInput(attrs={"class": "w-full ... quantity-input", "step": "1"}),
             "price": forms.NumberInput(attrs={"class": "w-full ... price-input", "step": "0.01"}),
+            
+            
         }
 
     def __init__(self, *args, **kwargs):

@@ -159,7 +159,7 @@ from celery.schedules import crontab
 CELERY_BEAT_SCHEDULE = {
     'daily_auto_forecast': {
         'task': 'api.forecast.tasks.auto_forecast_and_notify',
-        'schedule': crontab(hour=7, minute=0),
+        'schedule': crontab(hour=9, minute=18),
     },
 }
 # Email Settings

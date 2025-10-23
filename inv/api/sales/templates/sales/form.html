@@ -100,9 +100,20 @@ $(function() {
     const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
     let formCount = parseInt(totalForms.val(), 10);
 
+    function rowIsDeletedOrHidden($row) {
+        const $delete = $row.find("input[name$='-DELETE']");
+        // skip row if it has delete checked OR it's hidden (existing rows are hidden on delete)
+        return ($delete.length && $delete.prop("checked")) || !$row.is(":visible");
+    }
+
     function updateRowTotal($row) {
-        const qty = parseFloat($row.find(".quantity-input").val() || 0);
-        const price = parseFloat($row.find(".price-input").val() || 0);
+        if (rowIsDeletedOrHidden($row)) {
+            // ensure shown row-total is 0.00 for deleted/hidden rows
+            $row.find(".row-total").val("0.00");
+            return 0;
+        }
+        const qty = parseFloat($row.find(".quantity-input").val() || 0) || 0;
+        const price = parseFloat($row.find(".price-input").val() || 0) || 0;
         const total = qty * price;
         $row.find(".row-total").val(total.toFixed(2));
         return total;
@@ -111,7 +122,13 @@ $(function() {
     function updateGrandTotal() {
         let grand = 0;
         $(".item-form").each(function() {
-            grand += updateRowTotal($(this));
+            const $r = $(this);
+            if (!rowIsDeletedOrHidden($r)) {
+                grand += updateRowTotal($r);
+            } else {
+                // ensure deleted/hidden rows don't contribute
+                $r.find(".row-total").val("0.00");
+            }
         });
         $("#grand-total").text(grand.toFixed(2));
     }
@@ -131,12 +148,18 @@ $(function() {
                         $select.append(`<option value="${prod.id}" data-price="${prod.price}" ${sel}>${prod.name}</option>`);
                     });
                 });
+                // trigger change so each row gets its price updated
                 $(".product-select").trigger("change");
             });
     }
 
-    $("#id_warehouse").on("change", loadProductsForWarehouse);
+    // when warehouse changes, reload product lists and recalc totals
+    $("#id_warehouse").on("change", function() {
+        loadProductsForWarehouse();
+        // after products load, totals will be updated by product change handlers
+    });
 
+    // when product changes, set price and update totals
     $(document).on("change", ".product-select", function() {
         const price = $(this).find("option:selected").data("price") || 0;
         const $row = $(this).closest(".item-form");
@@ -145,14 +168,18 @@ $(function() {
         updateGrandTotal();
     });
 
+    // quantity or price edits
     $(document).on("input", ".quantity-input, .price-input", function() {
         updateRowTotal($(this).closest(".item-form"));
         updateGrandTotal();
     });
 
+    // add new item
     $("#add-item").on("click", function() {
         const emptyForm = `{{ items_formset.empty_form.as_p|escapejs }}`;
-        const newFormHtml = emptyForm.replace(/__prefix__/g, formCount);
+        let newFormHtml = emptyForm.replace(/__prefix__/g, formCount);
+
+        // wrap the empty form HTML in the same layout as existing rows (keeping same classes)
         const $newRow = $(`
             <div class="grid sm:grid-cols-6 gap-4 border rounded-xl p-4 bg-gray-50 item-form" data-index="${formCount}">
                 ${newFormHtml}
@@ -165,18 +192,32 @@ $(function() {
                 </div>
             </div>
         `);
+
+        // append and update management form
         $("#items").append($newRow);
         formCount++;
         totalForms.val(formCount);
+
+        // populate product select for the new row (if warehouse already selected)
+        loadProductsForWarehouse();
+
+        // trigger change on product-select within new row so price is set
+        $newRow.find(".product-select").first().trigger("change");
+
+        // recalc totals
+        updateGrandTotal();
     });
 
+    // remove item handler
     $(document).on("click", ".remove-item", function() {
         const $row = $(this).closest(".item-form");
         const $delete = $row.find("input[name$='-DELETE']");
         if ($delete.length) {
+            // mark for deletion and hide
             $delete.prop("checked", true);
             $row.hide();
         } else {
+            // newly-added (unsaved) row — remove from DOM and update TOTAL_FORMS
             $row.remove();
             formCount--;
             totalForms.val(formCount);
@@ -184,7 +225,7 @@ $(function() {
         updateGrandTotal();
     });
 
-    // Initialize totals
+    // initialize totals on page load
     updateGrandTotal();
 });
     </script>

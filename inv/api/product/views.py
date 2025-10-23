@@ -127,15 +127,20 @@ def ajax_get_product_price(request):
     except Product.DoesNotExist:
         return JsonResponse({"price": ""})
 
+
 def ajax_load_warehouse_products(request):
     warehouse_id = request.GET.get("warehouse_id")
-    supplier_id = request.GET.get("supplier_id")
-
-    products = Product.objects.all()
-    if supplier_id:
-        products = products.filter(supplier_id=supplier_id)
-    if warehouse_id:
-        products = products.filter(inventory_entries__warehouse_id=warehouse_id).distinct()
-
-    data = [{"id": p.id, "name": p.name, "price": str(p.price)} for p in products]
+    category_id = request.GET.get("category")
+    subcategory_id = request.GET.get("subcategory")
+    search = request.GET.get("search")
+    
+    qs = Product.objects.filter(inventory_entries__warehouse_id=warehouse_id)
+    if category_id:
+        qs = qs.filter(category_id=category_id)
+    if subcategory_id:
+        qs = qs.filter(subcategory_id=subcategory_id)
+    if search:
+        qs = qs.filter(name__icontains=search)
+    
+    data = [{"id": p.id, "name": p.name, "price": str(p.price)} for p in qs]
     return JsonResponse(data, safe=False)
