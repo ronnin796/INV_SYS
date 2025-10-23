@@ -36,36 +36,7 @@
                 {{ items_formset.management_form }}
                 <div id="items" class="space-y-4">
                     {% for formset_form in items_formset.forms %}
-                        <div class="grid sm:grid-cols-6 gap-4 border rounded-xl p-4 bg-gray-50 item-form"
-                             data-index="{{ forloop.counter0 }}">
-                            {% for hidden in formset_form.hidden_fields %}{{ hidden }}{% endfor %}
-                            <div>
-                                <label class="block text-gray-600 text-sm mb-1">Product</label>
-                                {{ formset_form.product|add_class:"product-select w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" }}
-                            </div>
-                            <div>
-                                <label class="block text-gray-600 text-sm mb-1">Quantity</label>
-                                {{ formset_form.quantity|add_class:"quantity-input w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" }}
-                            </div>
-                            <div>
-                                <label class="block text-gray-600 text-sm mb-1">Price</label>
-                                {{ formset_form.price|add_class:"price-input w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" }}
-                            </div>
-                            <div>
-                                <label class="block text-gray-600 text-sm mb-1">Total</label>
-                                <input type="text"
-                                       class="row-total w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
-                                       readonly
-                                       value="{{ formset_form.instance.total|default:'0.00' }}">
-                            </div>
-                            <div class="flex items-end justify-center">
-                                {{ formset_form.DELETE }}
-                                <button type="button"
-                                        class="remove-item bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">
-                                    ✖
-                                </button>
-                            </div>
-                        </div>
+                        {% include "sales/sale_item.html" with form=formset_form index=forloop.counter0 %}
                     {% endfor %}
                 </div>
                 <div class="mt-4">
@@ -95,6 +66,9 @@
 {% block extra_js %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        const emptyFormHtml = `
+    {% include "sales/sale_item.html" with form=items_formset.empty_form %}
+    `;
 $(function() {
     const prefix = "{{ items_formset.prefix }}";
     const totalForms = $(`#id_${prefix}-TOTAL_FORMS`);
@@ -176,22 +150,13 @@ $(function() {
 
     // add new item
     $("#add-item").on("click", function() {
-        const emptyForm = `{{ items_formset.empty_form.as_p|escapejs }}`;
+        const emptyForm =  emptyFormHtml;
+
         let newFormHtml = emptyForm.replace(/__prefix__/g, formCount);
 
         // wrap the empty form HTML in the same layout as existing rows (keeping same classes)
-        const $newRow = $(`
-            <div class="grid sm:grid-cols-6 gap-4 border rounded-xl p-4 bg-gray-50 item-form" data-index="${formCount}">
-                ${newFormHtml}
-                <div>
-                    <label class="block text-gray-600 text-sm mb-1">Total</label>
-                    <input type="text" class="row-total w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" readonly value="0.00">
-                </div>
-                <div class="flex items-end justify-center">
-                    <button type="button" class="remove-item bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">✖</button>
-                </div>
-            </div>
-        `);
+    const $newRow = $(newFormHtml);
+
 
         // append and update management form
         $("#items").append($newRow);

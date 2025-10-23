@@ -64,7 +64,7 @@ class SalesItemForm(forms.ModelForm):
         price = self.cleaned_data.get("price")
         product = self.cleaned_data.get("product")
         # fallback to product price if blank or 0
-        if (price in [None, ""] or price == 0) and product:
+        if price in [None, ""] and product:
             return getattr(product, "price", 0)
         return price
 
