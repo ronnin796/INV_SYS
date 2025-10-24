@@ -1,0 +1,28 @@
+<div class="grid sm:grid-cols-6 gap-4 border rounded-xl p-4 bg-gray-50 item-form"
+     data-index="{{ index }}">
+  {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+  <div>
+    <label class="block text-gray-600 text-sm mb-1">Product</label>
+    {{ form.product|add_class:"product-select w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" }}
+  </div>
+  <div>
+    <label class="block text-gray-600 text-sm mb-1">Quantity</label>
+    {{ form.quantity|add_class:"quantity-input w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" }}
+  </div>
+  <div>
+    <label class="block text-gray-600 text-sm mb-1">Price</label>
+    {{ form.price|add_class:"price-input w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" }}
+  </div>
+  <div>
+    <label class="block text-gray-600 text-sm mb-1">Total</label>
+    <input type="text"
+           class="row-total w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
+           readonly
+           value="{{ form.instance.total|default:'0.00' }}">
+  </div>
+  <div class="flex items-end justify-center">
+    {{ form.DELETE }}
+    <button type="button"
+            class="remove-item bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">✖</button>
+  </div>
+</div>

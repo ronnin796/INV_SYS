@@ -29,12 +29,19 @@ def mark_purchase_as_received(purchase, request=None):
         if request:
             messages.info(request, f"Purchase {purchase.reference_number} already received.")
         return False
+
+    # 🚫 Tell signal to skip this one
+    purchase._skip_signal = True
+
     purchase.status = "Received"
-    purchase.save()
-    update_inventory_after_purchase(purchase)
+    purchase.save()  # signal won't run
+
+    update_inventory_after_purchase(purchase)  # manual update
+
     if request:
         messages.success(request, f"Purchase {purchase.reference_number} marked received & inventory updated.")
     return True
+
 
 
 class PurchaseOrderFormsetMixin:

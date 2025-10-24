@@ -19,11 +19,16 @@ def detect_status_change(sender, instance, **kwargs):
         instance._previous_status = None
 
 
+
 @receiver(post_save, sender=PurchaseOrder)
 def handle_status_change(sender, instance, created, **kwargs):
     """
     Automatically update inventory when purchase status changes.
     """
+    # 🚫 Skip if view explicitly handled it
+    if getattr(instance, "_skip_signal", False):
+        return
+
     prev_status = getattr(instance, "_previous_status", None)
     new_status = instance.status
 
