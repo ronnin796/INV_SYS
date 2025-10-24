@@ -6,7 +6,7 @@ class SalesItemInline(admin.TabularInline):
     model = SalesItem
     extra = 1
     readonly_fields = ('total',)
-    fields = ('product', 'quantity', 'price', 'total')
+    fields = ('product', 'quantity', 'price', 'total' , 'created_at')
 
 
 @admin.register(SalesOrder)
