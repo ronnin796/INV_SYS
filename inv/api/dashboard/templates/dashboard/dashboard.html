@@ -1,127 +1,270 @@
 {% extends "core/base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-  <div class="min-h-screen bg-gray-50 text-gray-900 p-8">
-    <h1 class="text-3xl font-bold mb-8">📊 Dashboard Overview</h1>
-    <!-- KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-      <!-- Total Products -->
-      <div class="bg-white rounded-2xl p-5 text-center shadow-md hover:shadow-lg transition">
-        <p class="text-sm text-gray-500">Total Products</p>
-        <p class="text-4xl font-bold text-blue-600 mt-2">{{ total_products }}</p>
-        <canvas id="productsSparkline" height="30"></canvas>
+  <div class="min-h-screen bg-gray-50 text-gray-900 p-6 sm:p-8">
+    <div class="max-w-7xl mx-auto">
+      <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold">📊 Inventory Dashboard</h1>
+          <p class="text-sm text-gray-500 mt-1">Overview • Realtime KPIs • Forecast & actions</p>
+        </div>
+        <form method="get" class="flex items-center gap-2">
+          <label class="sr-only" for="from">From</label>
+          <input id="from"
+                 name="from"
+                 type="date"
+                 value="{{ request.GET.from }}"
+                 class="px-3 py-2 rounded-lg border" />
+          <label class="sr-only" for="to">To</label>
+          <input id="to"
+                 name="to"
+                 type="date"
+                 value="{{ request.GET.to }}"
+                 class="px-3 py-2 rounded-lg border" />
+          <button type="submit"
+                  class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">Apply</button>
+          <a href="{% url 'dashboard:dashboard' %}"
+             class="px-3 py-2 text-sm text-gray-600">Reset</a>
+        </form>
+      </header>
+      <!-- KPI row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl p-5 shadow-sm">
+          <p class="text-sm text-gray-500">Total Products</p>
+          <div class="flex items-end justify-between">
+            <p class="text-3xl font-bold text-sky-600">{{ total_products }}</p>
+            <canvas id="productsSparkline" width="120" height="40"></canvas>
+          </div>
+          <p class="text-xs text-gray-400 mt-2">Products cataloged across warehouses</p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm">
+          <p class="text-sm text-gray-500">Total Warehouses</p>
+          <p class="text-3xl font-bold text-green-600 mt-2">{{ total_warehouses }}</p>
+          <p class="text-xs text-gray-400 mt-2">Active locations</p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm">
+          <p class="text-sm text-gray-500">Total Sales (Qty)</p>
+          <div class="flex items-center justify-between">
+            <p class="text-3xl font-bold text-yellow-600">{{ total_sales|floatformat:2 }}</p>
+            <canvas id="salesSparkline" width="120" height="40"></canvas>
+          </div>
+          <p class="text-xs text-gray-400 mt-2">
+            Period: {{ request.GET.from|default:"last 7 days" }} → {{ request.GET.to|default:"today" }}
+          </p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm">
+          <p class="text-sm text-gray-500">Total Stock (Units)</p>
+          <div class="flex items-center justify-between">
+            <p class="text-3xl font-bold text-pink-600">{{ total_stock|floatformat:0 }}</p>
+            <canvas id="stockSparkline" width="120" height="40"></canvas>
+          </div>
+          <p class="text-xs text-gray-400 mt-2">Realtime inventory across warehouses</p>
+        </div>
       </div>
-      <!-- Warehouses -->
-      <div class="bg-white rounded-2xl p-5 text-center shadow-md hover:shadow-lg transition">
-        <p class="text-sm text-gray-500">Warehouses</p>
-        <p class="text-4xl font-bold text-green-600 mt-2">{{ total_warehouses }}</p>
+      <!-- Secondary KPIs -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <p class="text-sm text-gray-500">Avg Sales / Product</p>
+          <p class="text-2xl font-semibold text-indigo-600 mt-2">{{ avg_sales_per_product }}</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <p class="text-sm text-gray-500">Low Stock SKUs</p>
+          <p class="text-2xl font-semibold text-red-600 mt-2">{{ low_stock_products }}</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <p class="text-sm text-gray-500">Forecast alerts (today)</p>
+          <p class="text-2xl font-semibold text-amber-600 mt-2">{{ will_be_low_count }}</p>
+          <p class="text-xs text-gray-400 mt-1">Predicted low-stock by forecasts</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <p class="text-sm text-gray-500">Avg Predicted Sales</p>
+          <p class="text-2xl font-semibold text-slate-700 mt-2">{{ avg_predicted_sales|floatformat:2 }}</p>
+        </div>
       </div>
-      <!-- Total Sales -->
-      <div class="bg-white rounded-2xl p-5 text-center shadow-md hover:shadow-lg transition">
-        <p class="text-sm text-gray-500">Total Sales (Qty)</p>
-        <p class="text-4xl font-bold text-yellow-600 mt-2">{{ total_sales }}</p>
-        <canvas id="salesSparkline" height="30"></canvas>
+      <!-- Charts and lists -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm">
+          <h2 class="font-semibold text-lg mb-3">Stock Distribution by Warehouse</h2>
+          <canvas id="warehouseChart" height="120"></canvas>
+          <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <!-- small legend generated by JS -->
+            <div id="warehouseLegend" class="col-span-3 mt-2 text-xs text-gray-500"></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm">
+          <h2 class="font-semibold text-lg mb-3">Top 5 Products</h2>
+          <ul class="space-y-3">
+            {% for p in top_products_raw %}
+              <li class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium">{{ p.product__name }}</p>
+                  <p class="text-xs text-gray-400">Sold: {{ p.total_sold|floatformat:0 }}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm font-semibold">{{ p.total_sold|floatformat:0 }}</p>
+                </div>
+              </li>
+            {% empty %}
+              <li class="text-gray-400 text-sm">No sales data yet.</li>
+            {% endfor %}
+          </ul>
+          <div class="mt-4">
+            <canvas id="topProductsChart" height="120"></canvas>
+          </div>
+        </div>
       </div>
-      <!-- Total Stock -->
-      <div class="bg-white rounded-2xl p-5 text-center shadow-md hover:shadow-lg transition">
-        <p class="text-sm text-gray-500">Total Stock (Units)</p>
-        <p class="text-4xl font-bold text-pink-600 mt-2">{{ total_stock }}</p>
-        <canvas id="stockSparkline" height="30"></canvas>
+      <!-- Low stock table & recent orders -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl p-6 shadow-sm">
+          <h3 class="font-semibold mb-3">Low Stock Items (action required)</h3>
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="text-gray-500">
+                <th class="py-2">Product</th>
+                <th class="py-2">Warehouse</th>
+                <th class="py-2 text-right">Qty</th>
+                <th class="py-2 text-right">Below By</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in low_stock_list %}
+                <tr class="border-t">
+                  <td class="py-2">{{ item.product }}</td>
+                  <td class="py-2">{{ item.warehouse }}</td>
+                  <td class="py-2 text-right">{{ item.quantity|floatformat:0 }}</td>
+                  <td class="py-2 text-right text-sm text-red-600">-{{ item.below_by|floatformat:0 }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="py-4 text-center text-gray-400">No low stock items</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm">
+          <h3 class="font-semibold mb-3">Recent Activity</h3>
+          <div class="space-y-3">
+            <div>
+              <h4 class="text-sm font-medium">Sales Orders</h4>
+              <ul class="text-sm text-gray-600">
+                {% for so in recent_sales_orders %}
+                  <li class="flex justify-between">
+                    <span>
+                      {{ so.customer.name|default:"Unknown" }} •
+                      {% if so.reference_number %}
+                        {{ so.reference_number }}
+                      {% else %}
+                        SO-{{ so.id }}
+                      {% endif %}
+                    </span>
+                    <span class="text-xs text-gray-400">{{ so.created_at|date:"M d, H:i" }}</span>
+                  </li>
+                {% empty %}
+                  <li class="text-gray-400">No recent sales orders.</li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div>
+              <h4 class="text-sm font-medium">Purchase Orders</h4>
+              <ul class="text-sm text-gray-600">
+                {% for po in recent_pos %}
+                  <li class="flex justify-between">
+                    <span>
+                      {{ po.supplier.name|default:"Supplier" }} •
+                      {% if po.reference_number %}
+                        {{ po.reference_number }}
+                      {% else %}
+                        PO-{{ po.id }}
+                      {% endif %}
+                    </span>
+                    <span class="text-xs text-gray-400">{{ po.created_at|date:"M d, H:i" }}</span>
+                  </li>
+                {% empty %}
+                  <li class="text-gray-400">No recent purchase orders.</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    <!-- Additional KPIs -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-      <div class="bg-white rounded-2xl p-5 text-center shadow-md hover:shadow-lg transition">
-        <p class="text-sm text-gray-500">Avg Sales per Product</p>
-        <p class="text-2xl font-semibold text-indigo-600 mt-2">{{ avg_sales_per_product }}</p>
-      </div>
-      <div class="bg-white rounded-2xl p-5 text-center shadow-md hover:shadow-lg transition">
-        <p class="text-sm text-gray-500">Low Stock Products</p>
-        <p class="text-2xl font-semibold text-red-600 mt-2">{{ low_stock_products }}</p>
-      </div>
-    </div>
-    <!-- Charts -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-      <!-- Stock by Warehouse -->
-      <div class="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition">
-        <h2 class="text-lg font-semibold mb-4">🏢 Stock Distribution by Warehouse</h2>
-        <canvas id="warehouseChart" height="200"></canvas>
-      </div>
-      <!-- Top Selling Products -->
-      <div class="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition">
-        <h2 class="text-lg font-semibold mb-4">🔥 Top Selling Products</h2>
-        <canvas id="topProductsChart" height="200"></canvas>
-      </div>
-    </div>
-    <!-- Top Products Table -->
-    <div class="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition max-w-4xl mx-auto">
-      <h2 class="text-lg font-semibold mb-4">Top 5 Products Summary</h2>
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="text-gray-500 border-b border-gray-300">
-            <th class="py-2">Product</th>
-            <th class="py-2 text-right">Total Sold</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for product in top_products %}
-            <tr class="border-b border-gray-200">
-              <td class="py-2">{{ product.product__name }}</td>
-              <td class="py-2 text-right text-green-600">{{ product.total_sold }}</td>
-            </tr>
-          {% empty %}
-            <tr>
-              <td colspan="2" class="py-4 text-center text-gray-400">No sales data yet</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
     </div>
   </div>
 {% endblock %}
 {% block extra_js %}
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-// Stock by Warehouse
-new Chart(document.getElementById('warehouseChart'), {
-  type: 'bar',
-  data: {
-    labels: {{ stock_labels|safe }},
-    datasets: [{
-      label: 'Stock Quantity',
-      data: {{ stock_values|safe }},
-      backgroundColor: {{ stock_values|safe }}.map(v => v < 10 ? '#EF4444' : v < 50 ? '#FBBF24' : '#10B981'),
-      borderColor: '#00000033',
-      borderWidth: 1,
-      borderRadius: 6
-    }]
-  },
-  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-});
+  // parse JSON-encoded variables passed from view
+  const stockLabels = JSON.parse({{ stock_labels|safe }});
+  const stockValues = JSON.parse({{ stock_values|safe }});
+  const topLabels = JSON.parse({{ top_product_labels|safe }});
+  const topValues = JSON.parse({{ top_product_values|safe }});
+  const trendLabels = JSON.parse({{ trend_labels|safe }});
+  const salesTrend = JSON.parse({{ sales_trend|safe }});
+  const stockTrend = JSON.parse({{ stock_trend|safe }});
 
-// Top Products Pie
-new Chart(document.getElementById('topProductsChart'), {
-  type: 'pie',
-  data: {
-    labels: {{ top_product_labels|safe }},
-    datasets: [{
-      data: {{ top_product_values|safe }},
-      backgroundColor: ['#3B82F6','#10B981','#FBBF24','#EC4899','#8B5CF6']
-    }]
-  },
-  options: { plugins: { legend: { position: 'bottom' } } }
-});
+  // small helper for gradient
+  function makeGradient(ctx, color) {
+    const g = ctx.createLinearGradient(0,0,0,80);
+    g.addColorStop(0, color + '33');
+    g.addColorStop(1, color + '00');
+    return g;
+  }
 
-// KPI Sparklines
-function createSparkline(id, data, color){
-  new Chart(document.getElementById(id), {
-    type: 'line',
-    data: { labels: {{ trend_labels|safe }}, datasets: [{ data: data, borderColor: color, fill:true, backgroundColor: color+'33', pointRadius:0, tension:0.3 }] },
-    options: { plugins:{legend:{display:false}}, scales:{x:{display:false},y:{display:false}} }
+  // Warehouse bar
+  new Chart(document.getElementById('warehouseChart'), {
+    type: 'bar',
+    data: {
+      labels: stockLabels,
+      datasets: [{
+        label: 'Stock',
+        data: stockValues,
+        backgroundColor: stockValues.map(v => v < 10 ? '#EF4444' : v < 50 ? '#FBBF24' : '#10B981'),
+        borderRadius: 6
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false }, tooltip: { mode: 'index' } },
+      scales: { y: { beginAtZero: true } },
+      responsive: true,
+      maintainAspectRatio: false
+    }
   });
-}
-createSparkline('productsSparkline', {{ sales_trend|safe }}, '#3B82F6');
-createSparkline('salesSparkline', {{ sales_trend|safe }}, '#F59E0B');
-createSparkline('stockSparkline', {{ stock_trend|safe }}, '#EC4899');
+
+  // Top products pie
+  new Chart(document.getElementById('topProductsChart'), {
+    type: 'doughnut',
+    data: {
+      labels: topLabels.length ? topLabels : ['No sales'],
+      datasets: [{
+        data: topValues.length ? topValues : [1],
+        backgroundColor: ['#3B82F6','#10B981','#FBBF24','#EC4899','#8B5CF6']
+      }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } }, responsive:true, maintainAspectRatio:false }
+  });
+
+  // Sparklines function with minimal axes
+  function createSparkline(canvasId, data, color) {
+    new Chart(document.getElementById(canvasId), {
+      type: 'line',
+      data: { labels: trendLabels, datasets: [{ data: data, borderColor: color, backgroundColor: color+'22', pointRadius:0, tension:0.3 }] },
+      options: {
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        elements: { line: { borderWidth: 2 } },
+        scales: {
+          x: { display: false },
+          y: { display: false }
+        },
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+  }
+
+  createSparkline('productsSparkline', salesTrend.map((v,i) => i===0 ? v : v*0.7), '#3B82F6');
+  createSparkline('salesSparkline', salesTrend, '#F59E0B');
+  createSparkline('stockSparkline', stockTrend, '#EC4899');
+
   </script>
 {% endblock %}
