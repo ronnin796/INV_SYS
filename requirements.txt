@@ -1,4 +1,4 @@
-apyori==1.1.2
+
 celery==5.5.3
 crispy-bootstrap4==2025.6
 dj-database-url==3.0.1
