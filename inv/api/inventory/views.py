@@ -8,11 +8,11 @@ from .forms import InventoryForm
 from api.warehouse.models import Warehouse
 from api.category.models import Category
 from api.subcategory.models import SubCategory
-from api.suppliers.models import Supplier  # Import here to avoid circular imports
+from api.suppliers.models import Supplier
 from api.product.models import Product
 
 # -----------------------------------------
-# Base CRUD mixin for DRYness
+# Base CRUD Mixin
 # -----------------------------------------
 class InventoryBaseView(AdminRequiredMixin, SuccessMessageMixin):
     model = Inventory
@@ -22,22 +22,23 @@ class InventoryBaseView(AdminRequiredMixin, SuccessMessageMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
 
-        # Extract product-related context for editing
         inventory = getattr(self, 'object', None)
         product = getattr(inventory, 'product', None)
 
         context.update({
             "suppliers": Supplier.objects.all(),
             "categories": Category.objects.all(),
-            "subcategories": SubCategory.objects.filter(category=product.category)
-                if product and product.category else [],
-            "products": Product.objects.filter(subcategory=product.subcategory)
-                if product and product.subcategory else [],
+            "subcategories": (
+                SubCategory.objects.filter(category=product.category)
+                if product and product.category else []
+            ),
+            "products": (
+                Product.objects.filter(subcategory=product.subcategory)
+                if product and product.subcategory else []
+            ),
         })
         return context
-
 
 
 # -----------------------------------------
@@ -60,7 +61,7 @@ class InventoryListView(ListView):
         category_id = self.request.GET.get('category')
         subcategory_id = self.request.GET.get('subcategory')
 
-        # 🔍 Search
+        # Search
         if query:
             queryset = queryset.filter(
                 Q(product__name__icontains=query)
@@ -69,7 +70,7 @@ class InventoryListView(ListView):
                 | Q(product__subcategory__name__icontains=query)
             )
 
-        # 🏭 Filters
+        # Filters
         if warehouse_id:
             queryset = queryset.filter(warehouse_id=warehouse_id)
         if category_id:
@@ -86,14 +87,16 @@ class InventoryListView(ListView):
         context.update({
             'warehouses': Warehouse.objects.all(),
             'categories': Category.objects.all(),
-            'subcategories': SubCategory.objects.filter(category_id=category_id)
-            if category_id else None,
+            'subcategories': (
+                SubCategory.objects.filter(category_id=category_id)
+                if category_id else None
+            ),
         })
         return context
 
 
 # -----------------------------------------
-# CRUD Views (DRY!)
+# CRUD Views
 # -----------------------------------------
 class InventoryCreateView(InventoryBaseView, CreateView):
     success_message = "Inventory item created successfully!"

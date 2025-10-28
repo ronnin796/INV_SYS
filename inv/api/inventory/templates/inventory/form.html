@@ -22,7 +22,7 @@
                         <option value="">Select Supplier</option>
                         {% for s in suppliers %}
                             <option value="{{ s.id }}"
-                                    {% if form.instance.product and form.instance.product.supplier_id == s.id %}selected{% endif %}>
+                                    {% if form.instance.product and form.instance.product.supplier.id == s.id %}selected{% endif %}>
                                 {{ s.name }}
                             </option>
                         {% endfor %}
@@ -37,7 +37,7 @@
                         <option value="">Select Category</option>
                         {% for c in categories %}
                             <option value="{{ c.id }}"
-                                    {% if form.instance.product and form.instance.product.category_id == c.id %}selected{% endif %}>
+                                    {% if form.instance.product and form.instance.product.category.id == c.id %}selected{% endif %}>
                                 {{ c.name }}
                             </option>
                         {% endfor %}
@@ -50,6 +50,12 @@
                             name="subcategory"
                             class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option value="">Select Subcategory</option>
+                        {% for sc in subcategories %}
+                            <option value="{{ sc.id }}"
+                                    {% if form.instance.product and form.instance.product.subcategory.id == sc.id %}selected{% endif %}>
+                                {{ sc.name }}
+                            </option>
+                        {% endfor %}
                     </select>
                 </div>
                 <!-- Product -->
@@ -59,6 +65,12 @@
                             name="product"
                             class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option value="">Select Product</option>
+                        {% for p in products %}
+                            <option value="{{ p.id }}"
+                                    {% if form.instance.product and form.instance.product.id == p.id %}selected{% endif %}>
+                                {{ p.name }}
+                            </option>
+                        {% endfor %}
                     </select>
                 </div>
                 <!-- Warehouse -->
@@ -101,34 +113,52 @@ document.addEventListener("DOMContentLoaded", () => {
     const subcategorySelect = document.getElementById("id_subcategory");
     const productSelect = document.getElementById("id_product");
 
-    // Load subcategories when category changes
-    categorySelect.addEventListener("change", () => {
-        fetch(`${subcategoryUrl}?category=${categorySelect.value}`)
+    function loadSubcategories(categoryId, selectedId = null) {
+        fetch(`${subcategoryUrl}?category=${categoryId}`)
             .then(res => res.json())
             .then(data => {
                 subcategorySelect.innerHTML = "<option value=''>Select Subcategory</option>";
                 data.forEach(item => {
-                    subcategorySelect.innerHTML += `<option value='${item.id}'>${item.name}</option>`;
+                    subcategorySelect.innerHTML += `<option value='${item.id}' ${item.id == selectedId ? "selected" : ""}>${item.name}</option>`;
                 });
-                productSelect.innerHTML = "<option value=''>Select Product</option>";
             });
+    }
+
+    function loadProducts(subcategoryId, supplierId, selectedId = null) {
+        if (!subcategoryId || !supplierId) return;
+        const params = new URLSearchParams({ subcategory: subcategoryId, supplier: supplierId });
+        fetch(`${productUrl}?${params}`)
+            .then(res => res.json())
+            .then(data => {
+                productSelect.innerHTML = "<option value=''>Select Product</option>";
+                data.forEach(item => {
+                    productSelect.innerHTML += `<option value='${item.id}' ${item.id == selectedId ? "selected" : ""}>${item.name}</option>`;
+                });
+            });
+    }
+
+    // Preload for Edit Mode
+    const selectedCategory = categorySelect.value;
+    const selectedSupplier = supplierSelect.value;
+    const selectedSubcategory = "{{ form.instance.product.subcategory.id|default:'' }}";
+    const selectedProduct = "{{ form.instance.product.id|default:'' }}";
+
+    if (selectedCategory && selectedSubcategory) {
+        loadSubcategories(selectedCategory, selectedSubcategory);
+    }
+    if (selectedSubcategory && selectedSupplier && selectedProduct) {
+        loadProducts(selectedSubcategory, selectedSupplier, selectedProduct);
+    }
+
+    // Dynamic load on change
+    categorySelect.addEventListener("change", () => {
+        loadSubcategories(categorySelect.value);
+        productSelect.innerHTML = "<option value=''>Select Product</option>";
     });
 
-    // Load products when supplier or subcategory changes
     [subcategorySelect, supplierSelect].forEach(sel => {
         sel.addEventListener("change", () => {
-            const params = new URLSearchParams({
-                subcategory: subcategorySelect.value,
-                supplier: supplierSelect.value,
-            });
-            fetch(`${productUrl}?${params.toString()}`)
-                .then(res => res.json())
-                .then(data => {
-                    productSelect.innerHTML = "<option value=''>Select Product</option>";
-                    data.forEach(item => {
-                        productSelect.innerHTML += `<option value='${item.id}'>${item.name}</option>`;
-                    });
-                });
+            loadProducts(subcategorySelect.value, supplierSelect.value);
         });
     });
 });
