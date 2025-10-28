@@ -6,6 +6,20 @@ from collections import defaultdict
 from api.inventory.models import Inventory
 from .services import get_or_create_forecast
 from django.conf import settings
+import time
+
+
+
+@shared_task
+def test_task():
+    print("Starting background task...")
+    time.sleep(5)
+    print("Task completed!")
+    return "Done"
+
+
+
+
 @shared_task
 def auto_forecast_and_notify():
     today = timezone.now().date()
@@ -49,3 +63,4 @@ def auto_forecast_and_notify():
         )
 
     return f"Processed {len(inventories)} inventories, sent {len(warehouse_alerts)} emails."
+

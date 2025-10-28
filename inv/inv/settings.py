@@ -156,12 +156,19 @@ CELERY_TIMEZONE = 'Asia/Kathmandu'  # optional
 
 from celery.schedules import crontab
 
+
 CELERY_BEAT_SCHEDULE = {
     'daily_auto_forecast': {
         'task': 'api.forecast.tasks.auto_forecast_and_notify',
         'schedule': crontab(hour=9, minute=18),
     },
+    'daily_low_stock_check': {
+        'task': 'api.inventory.tasks.check_and_notify_low_stock',
+        'schedule': crontab(hour=9, minute=0),
+    },
 }
+
+
 # Email Settings
 # Email configuration
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
