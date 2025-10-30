@@ -1,62 +1,73 @@
 {% extends "core/base.html" %}
 {% block content %}
-    <h1 class="text-xl font-bold mb-4">📊 Stock Forecast Dashboard</h1>
-    <form method="get" class="mb-6 flex gap-4">
-        <select name="product_id" class="border rounded px-2 py-1">
-            <option value="">All Products</option>
-            {% for product in products %}
-                <option value="{{ product.id }}"
-                        {% if request.GET.product_id == product.id|stringformat:"s" %}selected{% endif %}>
-                    {{ product.name }}
-                </option>
-            {% endfor %}
-        </select>
-        <select name="warehouse_id" class="border rounded px-2 py-1">
-            <option value="">All Warehouses</option>
-            {% for wh in warehouses %}
-                <option value="{{ wh.id }}"
-                        {% if request.GET.warehouse_id == wh.id|stringformat:"s" %}selected{% endif %}>
-                    {{ wh.name }}
-                </option>
-            {% endfor %}
-        </select>
-        <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Filter</button>
-    </form>
-    <table class="table-auto w-full border">
-        <thead class="bg-gray-200">
-            <tr>
-                <th>Product</th>
-                <th>Warehouse</th>
-                <th>Current Stock</th>
-                <th>Reorder Level</th>
-                <th>Predicted Sales (Next 30 days)</th>
-                <th>Projected Stock</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in forecast_data %}
-                <tr onclick="window.location='{% url 'forecast:forecast_chart' row.product.id row.warehouse.id %}'"
-                    class="cursor-pointer hover:bg-blue-50 {% if row.will_be_low %}bg-red-100{% else %}bg-green-50{% endif %}">
-                    <td>{{ row.product.name }}</td>
-                    <td>{{ row.warehouse.name }}</td>
-                    <td>{{ row.current_stock }}</td>
-                    <td>{{ row.reorder_level }}</td>
-                    <td>{{ row.predicted_sales|floatformat:2 }}</td>
-                    <td>{{ row.projected_stock|floatformat:2 }}</td>
-                    <td>
-                        {% if row.will_be_low %}
-                            ⚠️ Low Stock Soon
-                        {% else %}
-                            ✅ Stable
-                        {% endif %}
-                    </td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="7" class="text-center py-4">No forecast data available.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="p-6 bg-white rounded-2xl shadow-md">
+        <h1 class="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">📊 Stock Forecast Dashboard</h1>
+        <!-- Filter Form -->
+        <form method="get" class="mb-6 flex flex-wrap gap-4 items-center">
+            <select name="product_id"
+                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                <option value="">All Products</option>
+                {% for product in products %}
+                    <option value="{{ product.id }}"
+                            {% if request.GET.product_id == product.id|stringformat:"s" %}selected{% endif %}>
+                        {{ product.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <select name="warehouse_id"
+                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                <option value="">All Warehouses</option>
+                {% for wh in warehouses %}
+                    <option value="{{ wh.id }}"
+                            {% if request.GET.warehouse_id == wh.id|stringformat:"s" %}selected{% endif %}>
+                        {{ wh.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200">
+                Filter
+            </button>
+        </form>
+        <!-- Forecast Table -->
+        <div class="overflow-x-auto rounded-xl shadow-sm border border-gray-200">
+            <table class="min-w-full text-sm text-left border-collapse">
+                <thead class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold">
+                    <tr>
+                        <th class="px-4 py-3 border-b">Product</th>
+                        <th class="px-4 py-3 border-b">Warehouse</th>
+                        <th class="px-4 py-3 border-b">Current Stock</th>
+                        <th class="px-4 py-3 border-b">Reorder Level</th>
+                        <th class="px-4 py-3 border-b">Predicted Sales (Next 30 days)</th>
+                        <th class="px-4 py-3 border-b">Projected Stock</th>
+                        <th class="px-4 py-3 border-b">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for row in forecast_data %}
+                        <tr onclick="window.location='{% url 'forecast:forecast_chart' row.product.id row.warehouse.id %}'"
+                            class="cursor-pointer transition hover:scale-[1.01] duration-150 {% if row.will_be_low %} bg-red-50 hover:bg-red-100 {% else %} bg-green-50 hover:bg-green-100 {% endif %}">
+                            <td class="px-4 py-3 font-medium text-gray-800">{{ row.product.name }}</td>
+                            <td class="px-4 py-3">{{ row.warehouse.name }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ row.current_stock }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ row.reorder_level }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ row.predicted_sales|floatformat:2 }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ row.projected_stock|floatformat:2 }}</td>
+                            <td class="px-4 py-3 font-semibold">
+                                {% if row.will_be_low %}
+                                    <span class="text-red-600 flex items-center gap-1">⚠️ Low Stock Soon</span>
+                                {% else %}
+                                    <span class="text-green-600 flex items-center gap-1">✅ Stable</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-6 text-gray-500">No forecast data available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}

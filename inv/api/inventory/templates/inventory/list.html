@@ -8,29 +8,31 @@
         {% if messages %}
             <div>
                 {% for message in messages %}
-                    <div class="p-4 rounded-xl mb-3 {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                    <div class="p-4 rounded-xl mb-3 shadow-sm border {% if message.tags == 'success' %} bg-green-50 border-green-200 text-green-800 {% elif message.tags == 'error' %} bg-red-50 border-red-200 text-red-800 {% elif message.tags == 'warning' %} bg-yellow-50 border-yellow-200 text-yellow-800 {% else %} bg-blue-50 border-blue-200 text-blue-800 {% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
+        <!-- Filter Info -->
         {% if request.GET.warehouse %}
-            <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg mb-4">
-                Showing inventory for:
-                <strong>{{ inventory_items.first.warehouse.name }}</strong>
+            <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-xl shadow-sm flex justify-between items-center">
+                <div>
+                    Showing inventory for: <strong>{{ inventory_items.first.warehouse.name }}</strong>
+                </div>
                 <a href="{% url 'inventory:inventory_list' %}"
-                   class="ml-2 text-blue-600 hover:underline text-sm">Clear Filter</a>
+                   class="text-blue-600 hover:underline text-sm font-medium">✖ Clear Filter</a>
             </div>
         {% endif %}
-        <!-- Header + Filters + Search -->
+        <!-- Header + Filters -->
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <h1 class="text-3xl font-bold text-gray-800">🏗️ Inventory</h1>
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2">🏗️ Inventory</h1>
             <div class="flex flex-col sm:flex-row gap-2 items-center w-full sm:w-auto">
                 <form method="GET" class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <!-- Warehouse Filter -->
                     <select name="warehouse"
                             id="id_warehouse"
-                            class="border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="border border-gray-300 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option value="">All Warehouses</option>
                         {% for w in warehouses %}
                             <option value="{{ w.id }}"
@@ -42,7 +44,7 @@
                     <!-- Category Filter -->
                     <select name="category"
                             id="id_category"
-                            class="border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="border border-gray-300 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option value="">All Categories</option>
                         {% for cat in categories %}
                             <option value="{{ cat.id }}"
@@ -54,7 +56,7 @@
                     <!-- Subcategory Filter -->
                     <select name="subcategory"
                             id="id_subcategory"
-                            class="border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="border border-gray-300 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option value="">All Subcategories</option>
                         {% if subcategories %}
                             {% for sub in subcategories %}
@@ -70,57 +72,58 @@
                            name="q"
                            value="{{ request.GET.q }}"
                            placeholder="Search inventory..."
-                           class="border rounded-xl px-4 py-2 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                           class="border border-gray-300 rounded-xl px-4 py-2 w-full sm:w-64 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                           autocomplete="off">
                     <button type="submit"
-                            class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition">
-                        Filter
+                            class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition duration-200 shadow-sm">
+                        🔍 Filter
                     </button>
                 </form>
                 <!-- Add Inventory -->
                 <a href="{% url 'inventory:inventory_create' %}"
-                   class="bg-teal-500 text-white px-5 py-2.5 rounded-xl shadow hover:bg-teal-600 transition">
+                   class="bg-teal-500 text-white px-5 py-2.5 rounded-xl shadow hover:bg-teal-600 transition duration-200">
                     ➕ Add Inventory
                 </a>
             </div>
         </div>
         <!-- Table -->
-        <div class="overflow-x-auto bg-white rounded-2xl shadow">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+        <div class="overflow-x-auto bg-white rounded-2xl shadow-md border border-gray-100">
+            <table class="min-w-full text-sm text-left border-collapse">
+                <thead class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">S.N.</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subcategory</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reorder Level</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        <th class="px-6 py-3 border-b">S.N.</th>
+                        <th class="px-6 py-3 border-b">Product</th>
+                        <th class="px-6 py-3 border-b">Category</th>
+                        <th class="px-6 py-3 border-b">Subcategory</th>
+                        <th class="px-6 py-3 border-b">Warehouse</th>
+                        <th class="px-6 py-3 border-b">Quantity</th>
+                        <th class="px-6 py-3 border-b">Reorder Level</th>
+                        <th class="px-6 py-3 border-b">Status</th>
+                        <th class="px-6 py-3 border-b">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="divide-y divide-gray-200">
                     {% for item in inventory_items %}
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4">{{ forloop.counter }}</td>
-                            <td class="px-6 py-4 font-medium text-gray-800">{{ item.product.name }}</td>
+                        <tr class="hover:bg-blue-50 transition duration-150 ease-in-out">
+                            <td class="px-6 py-4 text-gray-700">{{ forloop.counter }}</td>
+                            <td class="px-6 py-4 font-semibold text-gray-800">{{ item.product.name }}</td>
                             <td class="px-6 py-4 text-gray-600">{{ item.product.category.name }}</td>
                             <td class="px-6 py-4 text-gray-600">{{ item.product.subcategory.name }}</td>
                             <td class="px-6 py-4 text-gray-600">{{ item.warehouse.name }}</td>
-                            <td class="px-6 py-4 text-gray-800 font-semibold">{{ item.quantity }}</td>
+                            <td class="px-6 py-4 text-gray-900 font-bold">{{ item.quantity }}</td>
                             <td class="px-6 py-4 text-gray-600">{{ item.reorder_level }}</td>
                             <td class="px-6 py-4">
                                 {% if item.is_below_reorder %}
-                                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">Low Stock</span>
+                                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">⚠️ Low Stock</span>
                                 {% else %}
-                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">OK</span>
+                                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">✅ OK</span>
                                 {% endif %}
                             </td>
-                            <td class="px-6 py-4 flex gap-3">
+                            <td class="px-6 py-4 flex gap-4">
                                 <a href="{% url 'inventory:inventory_edit' item.id %}"
-                                   class="text-blue-600 hover:underline text-sm">Edit</a>
+                                   class="text-blue-600 hover:underline font-medium text-sm">Edit</a>
                                 <a href="{% url 'inventory:inventory_delete' item.id %}"
-                                   class="text-red-600 hover:underline text-sm">Delete</a>
+                                   class="text-red-600 hover:underline font-medium text-sm">Delete</a>
                             </td>
                         </tr>
                     {% empty %}
@@ -137,7 +140,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script type="text/javascript">
 $(document).ready(function() {
-    // Load subcategories when category changes
+    // Load subcategories dynamically
     $("#id_category").change(function() {
         const categoryId = $(this).val();
         $.ajax({
@@ -145,35 +148,27 @@ $(document).ready(function() {
             data: {'category': categoryId},
             success: function(data) {
                 $("#id_subcategory").html('<option value="">Select Subcategory</option>');
-                data.forEach(function(sub) {
-                    $("#id_subcategory").append(`<option value="${sub.id}">${sub.name}</option>`);
-                });
-                $("#id_product").html('<option value="">Select Product</option>'); // Reset products
+                data.forEach(sub => $("#id_subcategory").append(`<option value="${sub.id}">${sub.name}</option>`));
+                $("#id_product").html('<option value="">Select Product</option>');
             }
         });
     });
 
-    // Function to update products based on warehouse + subcategory
+    // Update products based on warehouse + subcategory
     function loadProducts() {
         const warehouseId = $("#id_warehouse").val();
         const subcategoryId = $("#id_subcategory").val();
 
         $.ajax({
             url: "{% url 'product:ajax_load_products' %}",
-            data: {
-                'warehouse': warehouseId,
-                'subcategory': subcategoryId
-            },
+            data: {'warehouse': warehouseId, 'subcategory': subcategoryId},
             success: function(data) {
                 $("#id_product").html('<option value="">Select Product</option>');
-                data.forEach(function(prod) {
-                    $("#id_product").append(`<option value="${prod.id}">${prod.name}</option>`);
-                });
+                data.forEach(prod => $("#id_product").append(`<option value="${prod.id}">${prod.name}</option>`));
             }
         });
     }
 
-    // Trigger product loading on both warehouse + subcategory change
     $("#id_warehouse, #id_subcategory").change(loadProducts);
 });
     </script>

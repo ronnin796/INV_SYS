@@ -3,8 +3,8 @@
 {% block title %}Add/Edit Inventory{% endblock %}
 {% block content %}
     <div class="max-w-3xl mx-auto mt-12">
-        <div class="bg-white shadow-lg rounded-3xl p-10">
-            <h1 class="text-3xl font-bold mb-8 text-gray-800">
+        <div class="bg-white shadow-xl rounded-3xl p-10 border border-gray-100 transition hover:shadow-2xl">
+            <h1 class="text-3xl font-bold mb-8 text-gray-800 flex items-center gap-2">
                 {% if view.object %}
                     ✏️ Edit Inventory Entry
                 {% else %}
@@ -15,10 +15,10 @@
                 {% csrf_token %}
                 <!-- Supplier -->
                 <div>
-                    <label class="block text-gray-700 font-medium mb-2">Supplier</label>
+                    <label class="block text-gray-700 font-semibold mb-2">Supplier</label>
                     <select id="id_supplier"
                             name="supplier"
-                            class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
                         <option value="">Select Supplier</option>
                         {% for s in suppliers %}
                             <option value="{{ s.id }}"
@@ -30,10 +30,10 @@
                 </div>
                 <!-- Category -->
                 <div>
-                    <label class="block text-gray-700 font-medium mb-2">Category</label>
+                    <label class="block text-gray-700 font-semibold mb-2">Category</label>
                     <select id="id_category"
                             name="category"
-                            class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
                         <option value="">Select Category</option>
                         {% for c in categories %}
                             <option value="{{ c.id }}"
@@ -45,10 +45,10 @@
                 </div>
                 <!-- Subcategory -->
                 <div>
-                    <label class="block text-gray-700 font-medium mb-2">Subcategory</label>
+                    <label class="block text-gray-700 font-semibold mb-2">Subcategory</label>
                     <select id="id_subcategory"
                             name="subcategory"
-                            class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
                         <option value="">Select Subcategory</option>
                         {% for sc in subcategories %}
                             <option value="{{ sc.id }}"
@@ -60,10 +60,10 @@
                 </div>
                 <!-- Product -->
                 <div>
-                    <label class="block text-gray-700 font-medium mb-2">Product</label>
+                    <label class="block text-gray-700 font-semibold mb-2">Product</label>
                     <select id="id_product"
                             name="product"
-                            class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
                         <option value="">Select Product</option>
                         {% for p in products %}
                             <option value="{{ p.id }}"
@@ -75,22 +75,23 @@
                 </div>
                 <!-- Warehouse -->
                 <div>
-                    <label class="block text-gray-700 font-medium mb-2">Warehouse</label>
-                    {{ form.warehouse|add_class:"w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500" }}
+                    <label class="block text-gray-700 font-semibold mb-2">Warehouse</label>
+                    {{ form.warehouse|add_class:"w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition" }}
                 </div>
                 <!-- Quantity -->
                 <div>
-                    <label class="block text-gray-700 font-medium mb-2">Quantity</label>
-                    {{ form.quantity|add_class:"w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500" }}
+                    <label class="block text-gray-700 font-semibold mb-2">Quantity</label>
+                    {{ form.quantity|add_class:"w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition" }}
                 </div>
                 <!-- Reorder Level -->
                 <div>
-                    <label class="block text-gray-700 font-medium mb-2">Reorder Level</label>
-                    {{ form.reorder_level|add_class:"w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500" }}
+                    <label class="block text-gray-700 font-semibold mb-2">Reorder Level</label>
+                    {{ form.reorder_level|add_class:"w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition" }}
                 </div>
-                <div class="flex justify-end">
+                <!-- Submit -->
+                <div class="flex justify-end pt-4">
                     <button type="submit"
-                            class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition">
+                            class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:-translate-y-0.5">
                         {% if view.object %}
                             Update
                         {% else %}
@@ -114,6 +115,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const productSelect = document.getElementById("id_product");
 
     function loadSubcategories(categoryId, selectedId = null) {
+        if (!categoryId) {
+            subcategorySelect.innerHTML = "<option value=''>Select Subcategory</option>";
+            return;
+        }
         fetch(`${subcategoryUrl}?category=${categoryId}`)
             .then(res => res.json())
             .then(data => {
@@ -143,19 +148,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedSubcategory = "{{ form.instance.product.subcategory.id|default:'' }}";
     const selectedProduct = "{{ form.instance.product.id|default:'' }}";
 
-    if (selectedCategory && selectedSubcategory) {
-        loadSubcategories(selectedCategory, selectedSubcategory);
-    }
-    if (selectedSubcategory && selectedSupplier && selectedProduct) {
+    if (selectedCategory && selectedSubcategory) loadSubcategories(selectedCategory, selectedSubcategory);
+    if (selectedSubcategory && selectedSupplier && selectedProduct)
         loadProducts(selectedSubcategory, selectedSupplier, selectedProduct);
-    }
 
-    // Dynamic load on change
+    // On change
     categorySelect.addEventListener("change", () => {
         loadSubcategories(categorySelect.value);
         productSelect.innerHTML = "<option value=''>Select Product</option>";
     });
-
     [subcategorySelect, supplierSelect].forEach(sel => {
         sel.addEventListener("change", () => {
             loadProducts(subcategorySelect.value, supplierSelect.value);
