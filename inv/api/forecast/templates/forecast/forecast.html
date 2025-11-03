@@ -1,11 +1,37 @@
 {% extends "core/base.html" %}
+{% load static %}
+{% block title %}Forecast Dashboard{% endblock %}
 {% block content %}
+<<<<<<< HEAD
     <div class="p-6 bg-white rounded-2xl shadow-md">
         <h1 class="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">📊 Stock Forecast Dashboard</h1>
         <!-- Filter Form -->
         <form method="get" class="mb-6 flex flex-wrap gap-4 items-center">
             <select name="product_id"
                     class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none">
+=======
+    <div class="px-6 py-6">
+        <h1 class="text-3xl font-bold mb-6 flex items-center gap-2">📊 Stock Forecast Dashboard</h1>
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-green-100 border-l-4 border-green-600 p-4 rounded">
+                <p class="text-sm text-gray-600">Stable Products</p>
+                <p class="text-2xl font-bold text-green-800">{{ stable_count }}</p>
+            </div>
+            <div class="bg-yellow-100 border-l-4 border-yellow-600 p-4 rounded">
+                <p class="text-sm text-gray-600">Predicted to Drop Soon</p>
+                <p class="text-2xl font-bold text-yellow-800">{{ warning_count }}</p>
+            </div>
+            <div class="bg-red-100 border-l-4 border-red-600 p-4 rounded">
+                <p class="text-sm text-gray-600">Already Below Reorder</p>
+                <p class="text-2xl font-bold text-red-800">{{ low_stock_count }}</p>
+            </div>
+        </div>
+        <!-- Filter Form -->
+        <form method="get" class="mb-6 flex flex-wrap items-center gap-3">
+            <select name="product_id"
+                    class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400">
+>>>>>>> dashboard
                 <option value="">All Products</option>
                 {% for product in products %}
                     <option value="{{ product.id }}"
@@ -15,7 +41,11 @@
                 {% endfor %}
             </select>
             <select name="warehouse_id"
+<<<<<<< HEAD
                     class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none">
+=======
+                    class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400">
+>>>>>>> dashboard
                 <option value="">All Warehouses</option>
                 {% for wh in warehouses %}
                     <option value="{{ wh.id }}"
@@ -25,6 +55,7 @@
                 {% endfor %}
             </select>
             <button type="submit"
+<<<<<<< HEAD
                     class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200">
                 Filter
             </button>
@@ -58,6 +89,40 @@
                                     <span class="text-red-600 flex items-center gap-1">⚠️ Low Stock Soon</span>
                                 {% else %}
                                     <span class="text-green-600 flex items-center gap-1">✅ Stable</span>
+=======
+                    class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition">Filter</button>
+        </form>
+        <!-- Table -->
+        <div class="overflow-x-auto rounded-lg shadow">
+            <table class="w-full text-sm border-collapse">
+                <thead class="bg-blue-100 text-gray-700 uppercase text-xs font-semibold border-b">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Product</th>
+                        <th class="px-4 py-3 text-left">Warehouse</th>
+                        <th class="px-4 py-3 text-center">Current Stock</th>
+                        <th class="px-4 py-3 text-center">Reorder Level</th>
+                        <th class="px-4 py-3 text-center">Predicted Sales (30 days)</th>
+                        <th class="px-4 py-3 text-center">Projected Stock</th>
+                        <th class="px-4 py-3 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in forecast_data %}
+                        <tr data-product="{{ row.product.id }}"
+                            data-warehouse="{{ row.warehouse.id }}"
+                            class="cursor-pointer transition hover:bg-blue-50 {% if row.will_be_low %}bg-red-50{% else %}bg-green-50{% endif %}">
+                            <td class="px-4 py-3 font-medium text-gray-800">{{ row.product.name }}</td>
+                            <td class="px-4 py-3">{{ row.warehouse.name }}</td>
+                            <td class="px-4 py-3 text-center">{{ row.current_stock }}</td>
+                            <td class="px-4 py-3 text-center">{{ row.reorder_level }}</td>
+                            <td class="px-4 py-3 text-center">{{ row.predicted_sales|floatformat:2 }}</td>
+                            <td class="px-4 py-3 text-center">{{ row.projected_stock|floatformat:2 }}</td>
+                            <td class="px-4 py-3 text-center">
+                                {% if row.will_be_low %}
+                                    <span class="text-red-700 bg-red-100 px-2 py-1 rounded-lg font-semibold">⚠️ Low Stock Soon</span>
+                                {% else %}
+                                    <span class="text-green-700 bg-green-100 px-2 py-1 rounded-lg font-semibold">✅ Stable</span>
+>>>>>>> dashboard
                                 {% endif %}
                             </td>
                         </tr>
@@ -70,4 +135,99 @@
             </table>
         </div>
     </div>
+<<<<<<< HEAD
+=======
+    <!-- Modal -->
+    <div id="forecastModal"
+         class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-lg w-11/12 md:w-2/3 lg:w-1/2 p-6 relative">
+            <button id="closeModal"
+                    class="absolute top-2 right-3 text-gray-500 hover:text-red-600 text-xl font-bold">✕</button>
+            <h2 id="modalTitle" class="text-lg font-bold mb-4 text-gray-800"></h2>
+            <canvas id="forecastChart" height="150"></canvas>
+        </div>
+    </div>
+{% endblock %}
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+$(document).ready(function() {
+    let chartInstance = null;
+
+    // Open modal and load chart
+    $("tbody tr[data-product]").on("click", function() {
+        const productId = $(this).data("product");
+        const warehouseId = $(this).data("warehouse");
+        const productName = $(this).find("td:first").text();
+        const warehouseName = $(this).find("td:nth-child(2)").text();
+
+        $("#modalTitle").text(`${productName} — ${warehouseName}`);
+        $("#forecastModal").removeClass("hidden").addClass("flex");
+
+        $.ajax({
+            url: "{% url 'forecast:ajax_forecast_chart' %}",
+            data: {
+                product_id: productId,
+                warehouse_id: warehouseId
+            },
+            success: function(data) {
+                const ctx = document.getElementById("forecastChart").getContext("2d");
+                if (chartInstance) chartInstance.destroy();
+
+                chartInstance = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: data.dates,
+                        datasets: [
+                            {
+                                label: "Actual Sales",
+                                data: data.actual_sales,
+                                borderColor: "rgba(59,130,246,1)",
+                                tension: 0.3,
+                                fill: false,
+                            },
+                            {
+                                label: "Predicted Sales",
+                                data: data.predicted_sales,
+                                borderColor: "rgba(239,68,68,1)",
+                                borderDash: [5, 5],
+                                tension: 0.3,
+                                fill: false,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: "#374151" }
+                            },
+                            x: {
+                                ticks: { color: "#374151" }
+                            }
+                        },
+                        plugins: {
+                            legend: { position: "top" },
+                            tooltip: { mode: "index", intersect: false }
+                        }
+                    }
+                });
+            },
+            error: function() {
+                alert("Error loading chart data.");
+            }
+        });
+    });
+
+    // Close modal
+    $("#closeModal, #forecastModal").on("click", function(e) {
+        if (e.target.id === "forecastModal" || e.target.id === "closeModal") {
+            $("#forecastModal").addClass("hidden").removeClass("flex");
+        }
+    });
+});
+    </script>
+>>>>>>> dashboard
 {% endblock %}

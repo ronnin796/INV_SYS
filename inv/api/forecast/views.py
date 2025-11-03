@@ -9,7 +9,11 @@ from api.sales.models import SalesItem
 from .utils import forecast_sales_for_product
 import json
 from django.utils import timezone
-
+from django.http import JsonResponse
+from api.sales.models import SalesItem  # adjust if different
+from datetime import timedelta
+from django.utils import timezone
+import pandas as pd
 
 def forecast_alerts_view(request):
     from .models import ForecastResult
@@ -46,7 +50,30 @@ def forecast_dashboard(request):
 
     return render(request, "forecast/forecast.html", context)
 
+def ajax_forecast_chart(request):
+    product_id = request.GET.get("product_id")
+    warehouse_id = request.GET.get("warehouse_id")
 
+    # Example: fetch last 60 days of sales
+    qs = SalesItem.objects.filter(
+        product_id=product_id,
+        warehouse_id=warehouse_id
+    ).order_by("order__date")
+
+    if not qs.exists():
+        return JsonResponse({"dates": [], "actual_sales": [], "predicted_sales": []})
+
+    df = pd.DataFrame.from_records(qs.values("order__date", "quantity"))
+    df = df.groupby("order__date")["quantity"].sum().reset_index()
+
+    # Example simple prediction (extend with your ARIMA logic)
+    df["predicted"] = df["quantity"].rolling(7, min_periods=1).mean()
+
+    return JsonResponse({
+        "dates": list(df["order__date"].astype(str)),
+        "actual_sales": list(df["quantity"]),
+        "predicted_sales": list(df["predicted"]),
+    })
 
 
 

@@ -1,0 +1,69 @@
+{% extends "core/base.html" %}
+{% block title %}Stock Debug{% endblock %}
+{% block content %}
+  <div class="min-h-screen bg-gray-50 text-gray-900 p-6">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow">
+      <h1 class="text-xl font-bold mb-4">📊 Interactive Stock Debug View</h1>
+      <!-- Filter Dropdown -->
+      <p>{{ warehouses|length }} warehouses found.</p>
+      <form id="filter-form" method="get" class="flex items-center gap-3 mb-6">
+        <label for="warehouse" class="font-medium">Warehouse:</label>
+        <select id="warehouse"
+                name="warehouse"
+                class="border border-gray-300 rounded-lg p-2 bg-white"
+                onchange="document.getElementById('filter-form').submit()">
+          <option value="all" {% if selected_warehouse == 'all' %}selected{% endif %}>All Warehouses</option>
+          {% for w in warehouses %}
+            <option value="{{ w.id }}"
+                    {% if selected_warehouse == w.id|stringformat:"s" %}selected{% endif %}>{{ w.name }}</option>
+          {% endfor %}
+        </select>
+      </form>
+      <!-- Chart container -->
+      <div class="relative h-[400px]">
+        <canvas id="warehouseChart"></canvas>
+      </div>
+      <!-- Debug info -->
+      <div id="debug-info" class="mt-4 text-sm text-gray-600">
+        <p>
+          <strong>Labels:</strong> {{ stock_labels }}
+        </p>
+        <p>
+          <strong>Values:</strong> {{ stock_values }}
+        </p>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block extra_js %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const labels = {{ stock_labels|safe }};
+    const values = {{ stock_values|safe }};
+
+    const ctx = document.getElementById("warehouseChart");
+
+    if (!values.length) {
+      ctx.outerHTML = "<p class='text-center text-gray-400 mt-4'>No stock data available.</p>";
+    } else {
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Stock Quantity',
+            data: values,
+            backgroundColor: values.map(v => v < 10 ? '#EF4444' : v < 50 ? '#FBBF24' : '#10B981'),
+            borderRadius: 6
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } },
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+  </script>
+{% endblock %}
