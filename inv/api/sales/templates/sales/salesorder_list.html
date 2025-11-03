@@ -87,6 +87,15 @@
                                    class="text-blue-600 hover:underline text-sm">Edit</a>
                                 <a href="{% url 'sales:sales_delete' sale.id %}"
                                    class="text-red-600 hover:underline text-sm">Delete</a>
+                                {% if sale.status != 'Completed' %}
+                                    <form method="post" action="{% url 'sales:mark_as_completed' sale.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="text-green-600 hover:underline text-sm bg-green-50 px-2 py-1 rounded">
+                                            Mark as Completed
+                                        </button>
+                                    </form>
+                                {% endif %}
                             </td>
                         </tr>
                     {% empty %}

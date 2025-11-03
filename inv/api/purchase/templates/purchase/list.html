@@ -88,8 +88,14 @@
                                 <a href="{% url 'purchase:purchase_delete' purchase.id %}"
                                    class="text-red-600 hover:underline text-sm">Delete</a>
                                 {% if purchase.status != 'Received' %}
-                                    <a href="{% url 'purchase:mark_as_received' purchase.id %}"
-                                       class="text-green-600 hover:underline text-sm">Mark as Received</a>
+                                    <form method="post"
+                                          action="{% url 'purchase:mark_as_received' purchase.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="text-green-600 hover:underline text-sm bg-green-50 px-2 py-1 rounded">
+                                            Mark as Received
+                                        </button>
+                                    </form>
                                 {% endif %}
                             </td>
                         </tr>

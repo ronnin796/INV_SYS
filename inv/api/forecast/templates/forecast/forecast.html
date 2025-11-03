@@ -2,14 +2,6 @@
 {% load static %}
 {% block title %}Forecast Dashboard{% endblock %}
 {% block content %}
-<<<<<<< HEAD
-    <div class="p-6 bg-white rounded-2xl shadow-md">
-        <h1 class="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">📊 Stock Forecast Dashboard</h1>
-        <!-- Filter Form -->
-        <form method="get" class="mb-6 flex flex-wrap gap-4 items-center">
-            <select name="product_id"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none">
-=======
     <div class="px-6 py-6">
         <h1 class="text-3xl font-bold mb-6 flex items-center gap-2">📊 Stock Forecast Dashboard</h1>
         <!-- Summary Cards -->
@@ -31,7 +23,6 @@
         <form method="get" class="mb-6 flex flex-wrap items-center gap-3">
             <select name="product_id"
                     class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400">
->>>>>>> dashboard
                 <option value="">All Products</option>
                 {% for product in products %}
                     <option value="{{ product.id }}"
@@ -41,11 +32,7 @@
                 {% endfor %}
             </select>
             <select name="warehouse_id"
-<<<<<<< HEAD
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none">
-=======
                     class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400">
->>>>>>> dashboard
                 <option value="">All Warehouses</option>
                 {% for wh in warehouses %}
                     <option value="{{ wh.id }}"
@@ -55,7 +42,6 @@
                 {% endfor %}
             </select>
             <button type="submit"
-<<<<<<< HEAD
                     class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200">
                 Filter
             </button>
@@ -89,40 +75,6 @@
                                     <span class="text-red-600 flex items-center gap-1">⚠️ Low Stock Soon</span>
                                 {% else %}
                                     <span class="text-green-600 flex items-center gap-1">✅ Stable</span>
-=======
-                    class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition">Filter</button>
-        </form>
-        <!-- Table -->
-        <div class="overflow-x-auto rounded-lg shadow">
-            <table class="w-full text-sm border-collapse">
-                <thead class="bg-blue-100 text-gray-700 uppercase text-xs font-semibold border-b">
-                    <tr>
-                        <th class="px-4 py-3 text-left">Product</th>
-                        <th class="px-4 py-3 text-left">Warehouse</th>
-                        <th class="px-4 py-3 text-center">Current Stock</th>
-                        <th class="px-4 py-3 text-center">Reorder Level</th>
-                        <th class="px-4 py-3 text-center">Predicted Sales (30 days)</th>
-                        <th class="px-4 py-3 text-center">Projected Stock</th>
-                        <th class="px-4 py-3 text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in forecast_data %}
-                        <tr data-product="{{ row.product.id }}"
-                            data-warehouse="{{ row.warehouse.id }}"
-                            class="cursor-pointer transition hover:bg-blue-50 {% if row.will_be_low %}bg-red-50{% else %}bg-green-50{% endif %}">
-                            <td class="px-4 py-3 font-medium text-gray-800">{{ row.product.name }}</td>
-                            <td class="px-4 py-3">{{ row.warehouse.name }}</td>
-                            <td class="px-4 py-3 text-center">{{ row.current_stock }}</td>
-                            <td class="px-4 py-3 text-center">{{ row.reorder_level }}</td>
-                            <td class="px-4 py-3 text-center">{{ row.predicted_sales|floatformat:2 }}</td>
-                            <td class="px-4 py-3 text-center">{{ row.projected_stock|floatformat:2 }}</td>
-                            <td class="px-4 py-3 text-center">
-                                {% if row.will_be_low %}
-                                    <span class="text-red-700 bg-red-100 px-2 py-1 rounded-lg font-semibold">⚠️ Low Stock Soon</span>
-                                {% else %}
-                                    <span class="text-green-700 bg-green-100 px-2 py-1 rounded-lg font-semibold">✅ Stable</span>
->>>>>>> dashboard
                                 {% endif %}
                             </td>
                         </tr>
@@ -135,8 +87,6 @@
             </table>
         </div>
     </div>
-<<<<<<< HEAD
-=======
     <!-- Modal -->
     <div id="forecastModal"
          class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
@@ -200,18 +150,10 @@ $(document).ready(function() {
                     options: {
                         responsive: true,
                         scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: { color: "#374151" }
-                            },
-                            x: {
-                                ticks: { color: "#374151" }
-                            }
+                            y: { beginAtZero: true, ticks: { color: "#374151" } },
+                            x: { ticks: { color: "#374151" } }
                         },
-                        plugins: {
-                            legend: { position: "top" },
-                            tooltip: { mode: "index", intersect: false }
-                        }
+                        plugins: { legend: { position: "top" }, tooltip: { mode: "index", intersect: false } }
                     }
                 });
             },
@@ -229,5 +171,4 @@ $(document).ready(function() {
     });
 });
     </script>
->>>>>>> dashboard
 {% endblock %}

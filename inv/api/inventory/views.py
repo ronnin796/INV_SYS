@@ -111,14 +111,7 @@ class InventoryListView(ListView):
             'inventory_items': items,
             'warehouses': Warehouse.objects.all(),
             'categories': Category.objects.all(),
-<<<<<<< HEAD
-            'subcategories': (
-                SubCategory.objects.filter(category_id=category_id)
-                if category_id else None
-            ),
-=======
             'subcategories': SubCategory.objects.filter(category_id=category_id) if category_id else None,
->>>>>>> dashboard
         })
 
         return context

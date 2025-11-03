@@ -28,12 +28,19 @@ def mark_sale_as_completed(sale_order, request=None):
         if request:
             messages.info(request, f"Sale {sale_order.reference_number or sale_order.id} already completed.")
         return False
+
+    # Prevent any signal from updating inventory twice
+    sale_order._skip_signal = True
+
     sale_order.status = "Completed"
-    sale_order.save()
-    update_inventory_after_sale(sale_order)
+    sale_order.save()  # signals won't run
+
+    update_inventory_after_sale(sale_order)  # manual update
+
     if request:
         messages.success(request, f"Sale {sale_order.reference_number or sale_order.id} marked completed & inventory updated.")
     return True
+
 
 
 class SalesOrderFormsetMixin:
