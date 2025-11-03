@@ -74,24 +74,25 @@
                     </button>
                 </form>
                 <a href="{% url 'inventory:inventory_create' %}"
-                   class="bg-teal-500 text-white px-5 py-2.5 rounded-xl shadow hover:bg-teal-600 transition">➕ Add Inventory</a>
+                   class="bg-teal-500 text-white px-5 py-2.5 rounded-xl shadow hover:bg-teal-600 transition">➕ Add
+                Inventory</a>
             </div>
         </div>
         <!-- Table -->
         <div class="overflow-x-auto bg-white rounded-2xl shadow-md border border-gray-100">
-            <table class="min-w-full text-sm text-left border-collapse">
+            <table class="min-w-full text-sm text-left border-collapse relative">
                 <thead class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">S.N.</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subcategory</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reorder Level</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Forecast</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        <th class="px-6 py-3">S.N.</th>
+                        <th class="px-6 py-3">Product</th>
+                        <th class="px-6 py-3">Category</th>
+                        <th class="px-6 py-3">Subcategory</th>
+                        <th class="px-6 py-3">Warehouse</th>
+                        <th class="px-6 py-3">Quantity</th>
+                        <th class="px-6 py-3">Reorder Level</th>
+                        <th class="px-6 py-3">Stock Status</th>
+                        <th class="px-6 py-3">Forecast</th>
+                        <th class="px-6 py-3">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -104,6 +105,7 @@
                             <td class="px-6 py-4 text-gray-600">{{ item.warehouse.name }}</td>
                             <td class="px-6 py-4 text-gray-900 font-bold">{{ item.quantity }}</td>
                             <td class="px-6 py-4 text-gray-600">{{ item.reorder_level }}</td>
+                            <!-- Stock Bar -->
                             <td class="px-6 py-4">
                                 <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
                                     <div class="h-2 rounded-full"
@@ -119,12 +121,15 @@
                                     {% endif %}
                                 </span>
                             </td>
+                            <!-- Forecast Chart -->
                             <td class="px-6 py-4">
-                                <canvas class="sparkline-chart cursor-pointer"
-                                        data-series="{{ item.forecast_series|default:"[]"|join:"," }}"
-                                        data-predicted="{{ item.predicted_sales|default:"N/A" }}"
-                                        data-projected="{{ item.projected_stock|default:"N/A" }}"
-                                        data-status="{% if item.will_be_low %}Low Stock{% else %}OK{% endif %}"></canvas>
+                                <div class="relative h-12 w-32">
+                                    <canvas class="sparkline-chart cursor-pointer"
+                                            data-series="{{ item.forecast_series|default:'[]'|join:',' }}"
+                                            data-predicted="{{ item.predicted_sales|default:'N/A' }}"
+                                            data-projected="{{ item.projected_stock|default:'N/A' }}"
+                                            data-status="{% if item.will_be_low %}Low Stock{% else %}OK{% endif %}"></canvas>
+                                </div>
                             </td>
                             <td class="px-6 py-4 flex gap-4">
                                 <a href="{% url 'inventory:inventory_edit' item.id %}"
@@ -139,66 +144,60 @@
                         </tr>
                     {% endfor %}
                 </tbody>
-                <!-- Tooltip container outside table -->
-                <div id="forecast-tooltip"
-                     class="hidden absolute w-64 bg-white border shadow-lg p-3 rounded-lg z-50 pointer-events-none">
-                </div>
-            </tbody>
-        </table>
+            </table>
+        </div>
+        <!-- Tooltip container -->
+        <div id="forecast-tooltip"
+             class="hidden absolute w-64 bg-white border shadow-lg p-3 rounded-lg z-50 pointer-events-none text-sm">
+        </div>
     </div>
-</div>
-{% endblock content %}
+{% endblock %}
 {% block extra_js %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Render sparklines
-    document.querySelectorAll('.sparkline-chart').forEach(canvas => {
-        const series = canvas.dataset.series.split(',').map(Number);
-        new Chart(canvas, {
-            type: 'line',
-            data: {
-                labels: series.map((_, i) => i+1),
-                datasets: [{
-                    data: series,
-                    borderColor: '#3B82F6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 0
-                }]
-            },
-            options: {
-                plugins: { legend: { display: false } },
-                scales: { x: { display: false }, y: { display: false } },
-                elements: { line: { borderWidth: 2 } },
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
+  const tooltip = document.getElementById('forecast-tooltip');
 
-        // Tooltip logic
-        const tooltip = document.getElementById('forecast-tooltip');
+  document.querySelectorAll('.sparkline-chart').forEach(canvas => {
+    const ctx = canvas.getContext('2d');
+    const series = canvas.dataset.series ? canvas.dataset.series.split(',').map(Number) : [];
+    if (!series.length) return;
 
-        canvas.addEventListener('mousemove', e => {
-            const predicted = canvas.dataset.predicted;
-            const projected = canvas.dataset.projected;
-            const status = canvas.dataset.status;
-
-            tooltip.innerHTML = `
-                <p><strong>Predicted Sales (30 days):</strong> ${predicted}</p>
-                <p><strong>Projected Stock:</strong> ${projected}</p>
-                <p><strong>Status:</strong> ${status}</p>
-            `;
-            tooltip.style.left = e.pageX + 15 + 'px';
-            tooltip.style.top = e.pageY + 15 + 'px';
-            tooltip.classList.remove('hidden');
-        });
-
-        canvas.addEventListener('mouseleave', () => {
-            tooltip.classList.add('hidden');
-        });
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: series.map((_, i) => i + 1),
+        datasets: [{
+          data: series,
+          borderColor: '#3B82F6',
+          backgroundColor: 'rgba(59,130,246,0.2)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: { x: { display: false }, y: { display: false } },
+        responsive: true,
+        maintainAspectRatio: false
+      }
     });
+
+    // Tooltip events
+    canvas.addEventListener('mousemove', e => {
+      const { predicted, projected, status } = canvas.dataset;
+      tooltip.innerHTML = `
+        <p><strong>Predicted Sales (30 days):</strong> ${predicted}</p>
+        <p><strong>Projected Stock:</strong> ${projected}</p>
+        <p><strong>Status:</strong> ${status}</p>
+      `;
+      tooltip.style.left = e.pageX + 15 + 'px';
+      tooltip.style.top = e.pageY + 15 + 'px';
+      tooltip.classList.remove('hidden');
+    });
+    canvas.addEventListener('mouseleave', () => tooltip.classList.add('hidden'));
+  });
 });
     </script>
 {% endblock %}
