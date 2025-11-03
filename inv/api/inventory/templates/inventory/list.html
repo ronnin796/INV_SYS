@@ -1,7 +1,5 @@
 {% extends "core/base.html" %}
-{% block title %}
-    Inventory
-{% endblock title %}
+{% block title %}Inventory{% endblock %}
 {% block content %}
     <div class="max-w-7xl mx-auto mt-10 space-y-6">
         <!-- Alerts -->
@@ -14,6 +12,7 @@
                 {% endfor %}
             </div>
         {% endif %}
+        <!-- Filter info -->
         {% if request.GET.warehouse %}
             <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg mb-4">
                 Showing inventory for:
@@ -27,7 +26,6 @@
             <h1 class="text-3xl font-bold text-gray-800">🏗️ Inventory</h1>
             <div class="flex flex-col sm:flex-row gap-2 items-center w-full sm:w-auto">
                 <form method="GET" class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <!-- Warehouse Filter -->
                     <select name="warehouse"
                             id="id_warehouse"
                             class="border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -39,7 +37,6 @@
                             </option>
                         {% endfor %}
                     </select>
-                    <!-- Category Filter -->
                     <select name="category"
                             id="id_category"
                             class="border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -51,7 +48,6 @@
                             </option>
                         {% endfor %}
                     </select>
-                    <!-- Subcategory Filter -->
                     <select name="subcategory"
                             id="id_subcategory"
                             class="border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -65,7 +61,6 @@
                             {% endfor %}
                         {% endif %}
                     </select>
-                    <!-- Search -->
                     <input type="text"
                            name="q"
                            value="{{ request.GET.q }}"
@@ -76,11 +71,8 @@
                         Filter
                     </button>
                 </form>
-                <!-- Add Inventory -->
                 <a href="{% url 'inventory:inventory_create' %}"
-                   class="bg-teal-500 text-white px-5 py-2.5 rounded-xl shadow hover:bg-teal-600 transition">
-                    ➕ Add Inventory
-                </a>
+                   class="bg-teal-500 text-white px-5 py-2.5 rounded-xl shadow hover:bg-teal-600 transition">➕ Add Inventory</a>
             </div>
         </div>
         <!-- Table -->
@@ -95,7 +87,8 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reorder Level</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Forecast</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                     </tr>
                 </thead>
@@ -110,11 +103,26 @@
                             <td class="px-6 py-4 text-gray-800 font-semibold">{{ item.quantity }}</td>
                             <td class="px-6 py-4 text-gray-600">{{ item.reorder_level }}</td>
                             <td class="px-6 py-4">
-                                {% if item.is_below_reorder %}
-                                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">Low Stock</span>
-                                {% else %}
-                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">OK</span>
-                                {% endif %}
+                                <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                                    <div class="h-2 rounded-full"
+                                         style="width: {{ item.stock_percent }}%;
+                                                background-color: {% if item.stock_percent < 30 %}#EF4444{% elif item.stock_percent < 70 %}#FBBF24{% else %}#10B981{% endif %}">
+                                    </div>
+                                </div>
+                                <span class="text-xs mt-1 block">
+                                    {% if item.is_below_reorder %}
+                                        <span class="text-red-600 font-semibold">Low Stock</span>
+                                    {% else %}
+                                        <span class="text-green-600 font-semibold">OK</span>
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <canvas class="sparkline-chart cursor-pointer"
+                                        data-series="{{ item.forecast_series|default:"[]"|join:"," }}"
+                                        data-predicted="{{ item.predicted_sales|default:"N/A" }}"
+                                        data-projected="{{ item.projected_stock|default:"N/A" }}"
+                                        data-status="{% if item.will_be_low %}Low Stock{% else %}OK{% endif %}"></canvas>
                             </td>
                             <td class="px-6 py-4 flex gap-3">
                                 <a href="{% url 'inventory:inventory_edit' item.id %}"
@@ -125,56 +133,70 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="9" class="text-center py-6 text-gray-500">No inventory records found.</td>
+                            <td colspan="10" class="text-center py-6 text-gray-500">No inventory records found.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
-            </table>
-        </div>
+                <!-- Tooltip container outside table -->
+                <div id="forecast-tooltip"
+                     class="hidden absolute w-64 bg-white border shadow-lg p-3 rounded-lg z-50 pointer-events-none">
+                </div>
+            </tbody>
+        </table>
     </div>
+</div>
 {% endblock content %}
 {% block extra_js %}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript">
-$(document).ready(function() {
-    // Load subcategories when category changes
-    $("#id_category").change(function() {
-        const categoryId = $(this).val();
-        $.ajax({
-            url: "{% url 'product:ajax_load_subcategories' %}",
-            data: {'category': categoryId},
-            success: function(data) {
-                $("#id_subcategory").html('<option value="">Select Subcategory</option>');
-                data.forEach(function(sub) {
-                    $("#id_subcategory").append(`<option value="${sub.id}">${sub.name}</option>`);
-                });
-                $("#id_product").html('<option value="">Select Product</option>'); // Reset products
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Render sparklines
+    document.querySelectorAll('.sparkline-chart').forEach(canvas => {
+        const series = canvas.dataset.series.split(',').map(Number);
+        new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: series.map((_, i) => i+1),
+                datasets: [{
+                    data: series,
+                    borderColor: '#3B82F6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { display: false } },
+                elements: { line: { borderWidth: 2 } },
+                responsive: true,
+                maintainAspectRatio: false
             }
+        });
+
+        // Tooltip logic
+        const tooltip = document.getElementById('forecast-tooltip');
+
+        canvas.addEventListener('mousemove', e => {
+            const predicted = canvas.dataset.predicted;
+            const projected = canvas.dataset.projected;
+            const status = canvas.dataset.status;
+
+            tooltip.innerHTML = `
+                <p><strong>Predicted Sales (30 days):</strong> ${predicted}</p>
+                <p><strong>Projected Stock:</strong> ${projected}</p>
+                <p><strong>Status:</strong> ${status}</p>
+            `;
+            tooltip.style.left = e.pageX + 15 + 'px';
+            tooltip.style.top = e.pageY + 15 + 'px';
+            tooltip.classList.remove('hidden');
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            tooltip.classList.add('hidden');
         });
     });
-
-    // Function to update products based on warehouse + subcategory
-    function loadProducts() {
-        const warehouseId = $("#id_warehouse").val();
-        const subcategoryId = $("#id_subcategory").val();
-
-        $.ajax({
-            url: "{% url 'product:ajax_load_products' %}",
-            data: {
-                'warehouse': warehouseId,
-                'subcategory': subcategoryId
-            },
-            success: function(data) {
-                $("#id_product").html('<option value="">Select Product</option>');
-                data.forEach(function(prod) {
-                    $("#id_product").append(`<option value="${prod.id}">${prod.name}</option>`);
-                });
-            }
-        });
-    }
-
-    // Trigger product loading on both warehouse + subcategory change
-    $("#id_warehouse, #id_subcategory").change(loadProducts);
 });
     </script>
 {% endblock %}

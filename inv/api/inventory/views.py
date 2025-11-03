@@ -43,6 +43,8 @@ class InventoryBaseView(AdminRequiredMixin, SuccessMessageMixin):
 # -----------------------------------------
 # List View
 # -----------------------------------------
+from api.forecast.services import get_or_create_forecast
+
 class InventoryListView(ListView):
     model = Inventory
     template_name = 'inventory/list.html'
@@ -83,14 +85,35 @@ class InventoryListView(ListView):
         context = super().get_context_data(**kwargs)
         category_id = self.request.GET.get('category')
 
+        items = list(context['inventory_items'])
+
+        for item in items:
+            # Stock percentage
+            item.stock_percent = 0
+            if item.reorder_level:
+                item.stock_percent = min(int((item.quantity / item.reorder_level) * 100), 100)
+
+            # Attach forecast data
+            forecast = get_or_create_forecast(item, days_ahead=30)
+            if forecast:
+                item.forecast_series = forecast.forecast_series or []
+                item.predicted_sales = forecast.predicted_sales
+                item.projected_stock = forecast.projected_stock
+                item.will_be_low = forecast.will_be_low
+            else:
+                item.forecast_series = []
+                item.predicted_sales = None
+                item.projected_stock = None
+                item.will_be_low = None
+
         context.update({
+            'inventory_items': items,
             'warehouses': Warehouse.objects.all(),
             'categories': Category.objects.all(),
-            'subcategories': SubCategory.objects.filter(category_id=category_id)
-            if category_id else None,
+            'subcategories': SubCategory.objects.filter(category_id=category_id) if category_id else None,
         })
-        return context
 
+        return context
 
 # -----------------------------------------
 # CRUD Views (DRY!)
